@@ -1,0 +1,26 @@
+#!/bin/zsh
+
+#http://floatleft.com/notebook/mac-like-text-navigation-in-zsh
+# Skip forward/back a word with opt-arrow
+bindkey '[C' forward-word
+bindkey '[D' backward-word
+
+# Skip to start/end of line with cmd-arrow
+bindkey '[E' beginning-of-line
+bindkey '[F' end-of-line
+
+# Delete word with opt-backspace/opt-delete
+bindkey '[G' backward-kill-word
+bindkey '[H' kill-word
+
+# Delete line with cmd-backspace
+bindkey '[I' kill-whole-line
+
+# F12 sends process to foreground (mostly for vim)
+bindkey -s '^[[24~' 'fg\n'
+# F11 opens vim in current dir (TODO: merge F12 and F11)
+bindkey -s '^[[23~' 'vi .\n'
+# F10 attaches to tmux session 
+bindkey -s '^[[21~' 'tmux attach\n'
+# F9 opens current folder
+bindkey -s '^[[20~' 'open .\n'

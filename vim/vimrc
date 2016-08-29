@@ -1,0 +1,129 @@
+" This must be first, because it changes other options as side effect
+set nocompatible
+
+call plug#begin('~/.vim/plugged')
+
+" Make sure you use single quotes
+
+" js
+Plug 'jelera/vim-javascript-syntax'
+Plug 'pangloss/vim-javascript'
+Plug 'nathanaelkane/vim-indent-guides'
+Plug 'Raimondi/delimitMate'
+Plug 'scrooloose/syntastic'
+" html/css
+Plug 'mattn/emmet-vim'
+Plug 'mustache/vim-mustache-handlebars'
+Plug 'groenewege/vim-less'
+" json
+Plug 'elzr/vim-json'
+" general
+Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
+Plug 'junegunn/fzf.vim'
+Plug 'airblade/vim-gitgutter'
+Plug 'scrooloose/nerdcommenter'
+Plug 'tpope/vim-surround'
+
+" Add plugins to &runtimepath
+call plug#end()
+
+" show line numbers
+set number
+
+" add fzf to vim
+set rtp+=~/usr/local/opt/fzf
+
+" general prefs
+set t_Co=256
+colorscheme distinguished
+syntax on
+
+" key mappings ---------------------------
+let mapleader = ","
+" clear search
+map <leader>c :nohlsearch<CR>
+" source global vim
+map <leader>s :so ~/.vimrc<CR>
+" source project specific vimrc
+map <leader>sl :so .vimrc.local<CR>
+
+" load a local vimrc file if it exists
+if filereadable(".vimrc.local")
+        source .vimrc.local
+endif
+
+" new file in current dir
+map <leader>nf :e! <C-R>=expand("%:h")<CR>/
+" rename file in current dir
+map <leader>mf :!mv <C-R>=expand("%")<CR> <C-R>=expand("%:h")<CR>/
+" new folder in current dir
+map <leader>nF :!mkdir <C-R>=expand("%:h")<CR>/
+" git
+" blame current file
+map <leader>gb :!git blame %<CR>
+" diff current file
+map <leader>gd :silent !git diff %<CR> :redraw!<Cr>
+map <leader>gD :silent !git diff<CR> :redraw!<Cr>
+" open current file in system default program
+map <leader>o :!open %<CR>
+" open current directory
+map <leader>O :!open <C-R>=expand("%:h")<CR><Cr>
+" f12 sends vim to background
+map <F12> <C-z>
+" disable arrow keys!
+inoremap  <Up>     <NOP>
+inoremap  <Down>   <NOP>
+inoremap  <Left>   <NOP>
+inoremap  <Right>  <NOP>
+noremap   <Up>     <NOP>
+noremap   <Down>   <NOP>
+noremap   <Left>   <NOP>
+noremap   <Right>  <NOP>
+inoremap <esc> <NOP>
+
+
+" vim split navigation
+nnoremap <C-J> <C-W><C-J>
+nnoremap <C-K> <C-W><C-K>
+nnoremap <C-L> <C-W><C-L>
+nnoremap <C-H> <C-W><C-H>
+
+
+" FZF config
+nnoremap <silent> <C-t> :Files<CR>
+
+" open splits where it makes sense
+set splitbelow
+set splitright
+
+" line numbers
+set number
+" allow unwritten buffers to be 'closed'
+set hidden
+" open splits to the right
+set splitright
+" show filename in status bar
+set laststatus=2
+" highlight cursor
+set cursorline
+" ignore case when searching
+set ignorecase    
+" ignore case if search pattern is all lowercase,
+set smartcase     
+" highlight search
+set hlsearch
+" show first search match as you type
+set incsearch
+" dont use swap files
+set noswapfile
+" dont wrap lines
+set nowrap
+" show newlines as $
+set list
+" osx clipboard
+set clipboard=unnamed
+" 4 spaces by default
+set smartindent
+set tabstop=4
+set shiftwidth=4
+set expandtab

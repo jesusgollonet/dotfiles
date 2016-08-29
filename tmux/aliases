@@ -1,0 +1,21 @@
+#!/bin/bash
+# tmux
+alias ta="tmux attach"
+alias taa="tmux attach -t"
+alias td="tmux detach"
+alias tls="tmux list-sessions"
+alias tn="tmux new"
+alias tnn="tmux new -s"
+alias tks="tmux kill-session -t"
+alias tkss="tmux kill-server"
+
+create_tmux_session_if_not_exists(){
+    tmux has-session -t $1 || { tmux new -s $1 -d }
+}
+
+run_in_tmux_session(){
+    local name=$1
+    local command=$2
+    tmux send -t $name:0 "$command" Enter
+}
+

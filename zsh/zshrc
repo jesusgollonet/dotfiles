@@ -1,0 +1,28 @@
+#!/bin/zsh
+
+autoload -Uz promptinit
+promptinit
+
+prompt adam2
+
+. ~/.dotfiles/zsh/keys
+. ~/.dotfiles/tmux/aliases
+
+# use brew vim over system vim
+alias vim='/usr/local/bin/vim'
+alias vi='/usr/local/bin/vim'
+alias v='/usr/local/bin/vim'
+#alias ls='ls -laG'
+
+# add bin to path
+export PATH=/Users/jgb/.bin:$PATH
+
+# enable fzf
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+# Setting ag as the default source for fzf
+export FZF_DEFAULT_COMMAND='find .'
+# To apply the command to CTRL-T as well
+export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+
+# load z
+. /Users/jgb/.bin/z.sh
