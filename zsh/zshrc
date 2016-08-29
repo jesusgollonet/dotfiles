@@ -20,7 +20,7 @@ alias v='/usr/local/bin/vim'
 #alias ls='ls -laG'
 
 # add bin to path
-export PATH=/Users/jgb/.bin:$PATH
+export PATH=~/.bin:$PATH
 
 # enable fzf
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
@@ -30,4 +30,4 @@ export FZF_DEFAULT_COMMAND='find .'
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 
 # load z
-. /Users/jgb/.bin/z.sh
+. ~/.bin/z.sh
