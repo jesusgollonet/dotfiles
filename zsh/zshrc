@@ -8,6 +8,11 @@ prompt adam2
 . ~/.dotfiles/zsh/keys
 . ~/.dotfiles/tmux/aliases
 
+setopt EXTENDED_HISTORY
+HISTSIZE=10000
+SAVEHIST=10000
+HISTFILE=~/.history
+
 # use brew vim over system vim
 alias vim='/usr/local/bin/vim'
 alias vi='/usr/local/bin/vim'
