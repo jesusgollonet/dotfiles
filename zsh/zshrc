@@ -13,6 +13,9 @@ HISTSIZE=10000
 SAVEHIST=10000
 HISTFILE=~/.history
 
+autoload -Uz compinit
+compinit
+
 # use brew vim over system vim
 alias vim='/usr/local/bin/vim'
 alias vi='/usr/local/bin/vim'
