@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# vim
+# use brew vim over system vim
+alias vim='/usr/local/bin/vim'
+alias vi='/usr/local/bin/vim'
+alias v='/usr/local/bin/vim'
+
+# git
+alias g='git'
+alias gs='git status'
+alias ga='git add'
+alias gaa='git add --all'
+alias gp='git push'
+alias gl='git pull'
+alias gd='git diff'
+alias gco='git checkout'
+alias gc='git commit'
+
+# other
+alias ls='ls -laG'

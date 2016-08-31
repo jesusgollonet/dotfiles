@@ -6,6 +6,7 @@ promptinit
 prompt adam2
 
 . ~/.dotfiles/zsh/keys
+. ~/.dotfiles/zsh/aliases
 . ~/.dotfiles/tmux/aliases
 
 setopt EXTENDED_HISTORY
@@ -16,11 +17,6 @@ HISTFILE=~/.history
 autoload -Uz compinit
 compinit
 
-# use brew vim over system vim
-alias vim='/usr/local/bin/vim'
-alias vi='/usr/local/bin/vim'
-alias v='/usr/local/bin/vim'
-#alias ls='ls -laG'
 
 # add bin to path
 export PATH=~/.bin:$PATH
