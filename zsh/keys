@@ -16,11 +16,13 @@ bindkey '[H' kill-word
 # Delete line with cmd-backspace
 bindkey '[I' kill-whole-line
 
-# F12 sends process to foreground (mostly for vim)
-bindkey -s '^[[24~' 'fg\n'
-# F11 opens vim in current dir (TODO: merge F12 and F11)
-bindkey -s '^[[23~' 'vi .\n'
-# F10 attaches to tmux session 
-bindkey -s '^[[21~' 'tmux attach\n'
+# F1 lists tmux sessions
+bindkey -s  '^[OP' 'tmux ls\n'
 # F9 opens current folder
 bindkey -s '^[[20~' 'open .\n'
+# F10 attaches to tmux session 
+bindkey -s '^[[21~' 'tmux attach\n'
+# F11 opens vim in current dir (TODO: merge F12 and F11)
+bindkey -s '^[[23~' 'vi .\n'
+# F12 sends process to foreground (mostly for vim)
+bindkey -s '^[[24~' 'fg\n'
