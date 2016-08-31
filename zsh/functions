@@ -1,0 +1,24 @@
+#!/bin/bash
+# tmux
+tmux_list_sessions(){
+    tmux list-sessions | cut -d ":" -f1
+}
+
+tmux_get_session_from_ls(){
+    local session_num
+    session_num=$1
+    tmux_list_sessions | sed -n "$session_num"p
+}
+
+tmux_go_to_session_num() {
+    local session_num
+    local session_name
+    session_num=$1
+    session_name=$(tmux_get_session_from_ls "$session_num");
+    if [ -n "$TMUX" ]; 
+    then 
+        tmux switch -t "$session_name";
+    else
+        tmux attach -t "$session_name"
+    fi; 
+}
