@@ -18,5 +18,10 @@ alias gdca='git diff --cached'
 alias gco='git checkout'
 alias gc='git commit'
 
-# other
-alias ls='ls -laG'
+# ls
+alias l='ls -laG'
+
+# dir movement
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
