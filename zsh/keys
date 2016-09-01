@@ -16,14 +16,15 @@ bindkey '[H' kill-word
 # Delete line with cmd-backspace
 bindkey '[I' kill-whole-line
 
-# F1 lists tmux sessions
+# F1 to F5 go to tmux sessions 
 bindkey -s  '^[OP' 'tmux_go_to_session_num 1\n'
 bindkey -s  '^[OQ' 'tmux_go_to_session_num 2\n'
 bindkey -s  '^[OR' 'tmux_go_to_session_num 3\n'
 bindkey -s  '^[OS' 'tmux_go_to_session_num 4\n'
+bindkey -s  '^[[15~' 'tmux_go_to_session_num 5\n'
 
-# F9 opens current folder
-bindkey -s '^[[20~' 'open .\n'
+# F9 lists tmux sessions
+bindkey -s '^[[20~' 'tmux ls\n'
 # F10 attaches to tmux session 
 bindkey -s '^[[21~' 'tmux attach\n'
 # F11 opens vim in current dir (TODO: merge F12 and F11)
