@@ -17,6 +17,7 @@ alias gd='git diff'
 alias gdca='git diff --cached'
 alias gco='git checkout'
 alias gc='git commit'
+alias glog='git log'
 
 # ls
 alias l='ls -laG'
