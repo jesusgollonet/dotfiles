@@ -1,4 +1,5 @@
 #!/bin/bash
+
 # tmux
 tmux_list_sessions(){
     tmux list-sessions | cut -d ":" -f1
@@ -21,4 +22,17 @@ tmux_go_to_session_num() {
     else
         tmux attach -t "$session_name"
     fi; 
+}
+
+#sketch. Create a timestamp_name folder in ~/Temp
+sketch(){
+    local sketch_name
+    local dir_name
+    if [ $# -eq 1 ]
+    then
+        sketch_name=_$1
+    fi
+    dir_name="$(date +"%Y-%m-%d_%T")$sketch_name" 
+
+    cd ~/Tmp && mkdir "$dir_name" && cd "$dir_name" && pwd
 }
