@@ -8,6 +8,7 @@ prompt adam2
 . ~/.dotfiles/zsh/keys
 . ~/.dotfiles/zsh/aliases
 . ~/.dotfiles/zsh/functions
+. ~/.dotfiles/zsh/setopt
 
 . ~/.dotfiles/tmux/aliases
 
