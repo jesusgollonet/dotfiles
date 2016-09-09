@@ -3,22 +3,28 @@
 autoload -Uz promptinit
 promptinit
 
+autoload -Uz compinit
+compinit
+
 prompt adam2
+
+# history search with arrows 
+autoload -U up-line-or-beginning-search
+autoload -U down-line-or-beginning-search
+zle -N up-line-or-beginning-search
+zle -N down-line-or-beginning-search
 
 . ~/.dotfiles/zsh/keys
 . ~/.dotfiles/zsh/aliases
 . ~/.dotfiles/zsh/functions
 . ~/.dotfiles/zsh/setopt
-
 . ~/.dotfiles/tmux/aliases
+. ~/.bin/z.sh
 
-setopt EXTENDED_HISTORY
 HISTSIZE=10000
 SAVEHIST=10000
 HISTFILE=~/.history
 
-autoload -Uz compinit
-compinit
 
 
 # add bin to path
@@ -32,4 +38,3 @@ export FZF_DEFAULT_COMMAND='find .'
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 
 # load z
-. ~/.bin/z.sh
