@@ -39,6 +39,9 @@ set rtp+=~/usr/local/opt/fzf
 set t_Co=256
 colorscheme distinguished
 syntax on
+filetype on
+au BufNewFile,BufRead *.dust set filetype=html
+
 
 " key mappings ---------------------------
 let mapleader = ","
