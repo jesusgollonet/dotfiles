@@ -28,11 +28,13 @@ tmux_go_to_session_num() {
 sketch(){
     local sketch_name
     local dir_name
+    local tmp_dir
     if [ $# -eq 1 ]
     then
         sketch_name=_$1
     fi
-    dir_name="$(date +"%Y-%m-%d_%T")$sketch_name" 
+    dir_name="$(date +"%Y-%m-%d_%H.%M.%S")$sketch_name" 
 
-    cd ~/Tmp && mkdir "$dir_name" && cd "$dir_name" && pwd
+    tmp_dir=~/Tmp/"$dir_name"
+    mkdir "$tmp_dir" && cd "$tmp_dir" && pwd
 }
