@@ -1,7 +1,7 @@
 #!/bin/bash
 # tmux
-alias ta="tmux attach"
-alias taa="tmux attach -t"
+alias ta="tmux attach -t"
+alias taa="tmux attach"
 alias td="tmux detach"
 alias tls="tmux list-sessions"
 alias tn="tmux new"
