@@ -29,6 +29,7 @@ HISTFILE=~/.history
 
 # add bin to path
 export PATH=~/.bin:$PATH
+export PATH=~/.dotfiles/bin:$PATH
 
 # enable fzf
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh

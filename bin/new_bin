@@ -1,0 +1,18 @@
+#!/bin/bash
+
+main(){
+    local bin_name
+    bin_name=$1
+    touch "$bin_name"
+    chmod +x "$bin_name"
+cat << EOF > "$bin_name" 
+#!/bin/bash
+
+echo "$bin_name"
+
+EOF
+    vi "$bin_name"
+}
+
+main "$1"
+
