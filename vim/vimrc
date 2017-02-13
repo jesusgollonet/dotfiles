@@ -15,10 +15,15 @@ Plug 'scrooloose/syntastic'
 Plug 'mattn/emmet-vim'
 Plug 'mustache/vim-mustache-handlebars'
 Plug 'groenewege/vim-less'
+Plug 'digitaltoad/vim-pug'
 " elm
 Plug 'elmcast/elm-vim'
+" elm
+Plug 'raichoo/purescript-vim'
 " json
 Plug 'elzr/vim-json'
+" yaml
+Plug 'stephpy/vim-yaml'
 " general
 Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
 Plug 'junegunn/fzf.vim'
@@ -40,6 +45,7 @@ set t_Co=256
 colorscheme distinguished
 syntax on
 filetype on
+filetype plugin indent on
 au BufNewFile,BufRead *.dust set filetype=html
 
 
@@ -139,3 +145,5 @@ let g:syntastic_javascript_checkers = ['jshint']
 "let g:syntastic_check_on_open=1
 let g:syntastic_always_populate_loc_list=1
 "let g:syntastic_auto_loc_list=1
+"
+let g:omni_sql_no_default_maps = 1
