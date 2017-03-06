@@ -38,3 +38,9 @@ sketch(){
     tmp_dir=~/Tmp/"$dir_name"
     mkdir "$tmp_dir" && cd "$tmp_dir" && pwd
 }
+
+take(){
+    local dir_name
+    dir_name=$1
+    mkdir -p "$dir_name" && cd "$dir_name" || exit
+}
