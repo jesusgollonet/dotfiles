@@ -27,10 +27,11 @@ bindkey -s  '^[OR' 'tmux_go_to_session_num 3\n'
 bindkey -s  '^[OS' 'tmux_go_to_session_num 4\n'
 bindkey -s  '^[[15~' 'tmux_go_to_session_num 5\n'
 
-# F9 lists tmux sessions
-bindkey -s '^[[20~' 'tmux ls\n'
-# F10 attaches to tmux session 
-bindkey -s '^[[21~' 'tmux attach\n'
+# both ⏪ F7 and ⏩ F9 attach to tmux session (cycle through behaviour)
+bindkey -s '^[[18~' 'tmux attach\n'
+bindkey -s '^[[20~' 'tmux attach\n'
+# F8 ⏯  lists current tmux sessions  
+bindkey -s '^[[19~' 'tmux ls\n'
 # F11 opens vim in current dir (TODO: merge F12 and F11)
 bindkey -s '^[[23~' 'vi .\n'
 # F12 sends process to foreground (mostly for vim)
