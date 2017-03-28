@@ -1,0 +1,11 @@
+#!/bin/bash
+
+echo "bin/new_project"
+
+main(){
+    local project_name="$1"
+    mkdir -p "$project_name"/{dev,doc,test}
+
+}
+
+main "$1"
