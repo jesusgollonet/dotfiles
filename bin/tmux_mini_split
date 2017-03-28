@@ -1,0 +1,9 @@
+#!/bin/bash
+
+echo "bin/tmux_helper_split"
+
+main(){
+    tmux split-window -v -p 15
+}
+
+main 
