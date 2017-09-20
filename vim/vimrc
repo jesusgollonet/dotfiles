@@ -8,6 +8,7 @@ call plug#begin('~/.vim/plugged')
 " js
 Plug 'jelera/vim-javascript-syntax'
 Plug 'pangloss/vim-javascript'
+Plug 'Quramy/vim-js-pretty-template'
 Plug 'nathanaelkane/vim-indent-guides'
 Plug 'Raimondi/delimitMate'
 Plug 'scrooloose/syntastic'
@@ -24,6 +25,8 @@ Plug 'raichoo/purescript-vim'
 Plug 'elzr/vim-json'
 " yaml
 Plug 'stephpy/vim-yaml'
+" jenkins
+Plug 'martinda/Jenkinsfile-vim-syntax'
 " general
 Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
 Plug 'junegunn/fzf.vim'
@@ -48,6 +51,7 @@ syntax on
 filetype on
 filetype plugin indent on
 au BufNewFile,BufRead *.dust set filetype=html
+au FileType javascript JsPreTmpl html
 
 
 " key mappings ---------------------------
@@ -149,3 +153,5 @@ let g:syntastic_always_populate_loc_list=1
 "let g:syntastic_auto_loc_list=1
 "
 let g:omni_sql_no_default_maps = 1
+
+let g:elm_format_autosave = 1
