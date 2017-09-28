@@ -4,7 +4,6 @@ echo "bin/in_split"
 
 main(){
    local command=$1
-   echo $command
    tmux split-window -v -p 15 "$command"
 }
 
