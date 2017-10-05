@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "bin/new_project"
+set -e
 
 main(){
     local project_name="$1"
