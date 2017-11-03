@@ -34,6 +34,7 @@ Plug 'airblade/vim-gitgutter'
 Plug 'scrooloose/nerdcommenter'
 Plug 'tpope/vim-surround'
 Plug 'sbdchd/neoformat'
+Plug 'suan/vim-instant-markdown'
 
 " Add plugins to &runtimepath
 call plug#end()
@@ -95,6 +96,7 @@ noremap   <Up>     <NOP>
 noremap   <Down>   <NOP>
 noremap   <Left>   <NOP>
 noremap   <Right>  <NOP>
+inoremap  <C-C>    <NOP>
 
 
 " vim split navigation
