@@ -53,6 +53,7 @@ filetype on
 filetype plugin indent on
 au BufNewFile,BufRead *.dust set filetype=html
 au FileType javascript JsPreTmpl html
+au BufRead,BufNewFile *.md setlocal textwidth=80
 
 
 " key mappings ---------------------------
