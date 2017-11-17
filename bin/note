@@ -15,7 +15,6 @@ main(){
         file_name="$short_date.md" 
     fi
 
-
     notes_dir=~/Notes/
     file_path="$notes_dir$file_name"
 
@@ -25,6 +24,7 @@ main(){
 ---
 title: $note_name
 date: $long_date
+draft: true
 ---
 
 
