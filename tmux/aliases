@@ -2,6 +2,7 @@
 # tmux
 alias ta="tmux attach -t"
 alias taa="tmux attach"
+alias ts="tmux switch -t"
 alias td="tmux detach"
 alias tls="tmux list-sessions"
 alias tn="tmux new"
