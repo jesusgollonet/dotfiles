@@ -15,7 +15,7 @@ main(){
         file_name="$short_date.md" 
     fi
 
-    notes_dir=~/Notes/
+    notes_dir=~/Notes/posts
     file_path="$notes_dir$file_name"
 
     if [ ! -f "$file_path" ]; then
