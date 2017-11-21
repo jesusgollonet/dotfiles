@@ -1,0 +1,9 @@
+#!/bin/bash
+
+main(){
+    local relative_json_path=$1
+    local key_name=$2
+    node -e "console.log(require('./$relative_json_path').$key_name)"
+}
+
+main "$1" "$2"
