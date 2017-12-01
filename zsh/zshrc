@@ -40,6 +40,9 @@ export PATH=~/.dotfiles/bin:$PATH
 
 # enable fzf
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+# source google cloud sdk files
+[ -f ~/.google-cloud-sdk/completion.zsh.inc ] && source ~/.google-cloud-sdk/completion.zsh.inc
+[ -f ~/.google-cloud-sdk/path.zsh.inc ] && source ~/.google-cloud-sdk/path.zsh.inc
 # Setting ag as the default source for fzf
 export FZF_DEFAULT_COMMAND='find .'
 # To apply the command to CTRL-T as well

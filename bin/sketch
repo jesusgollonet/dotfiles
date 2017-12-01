@@ -1,0 +1,18 @@
+#!/bin/bash
+
+#sketch. Create a timestamp_name folder in ~/Temp
+main(){
+    local sketch_name
+    local dir_name
+    local tmp_dir
+    if [ $# -eq 1 ]
+    then
+        sketch_name=_$1
+    fi
+    dir_name="$(date +"%Y-%m-%d_%H.%M.%S")$sketch_name" 
+
+    tmp_dir=~/Tmp/"$dir_name"
+    mkdir "$tmp_dir" && cd "$tmp_dir" && pwd
+}
+
+main "$1"
