@@ -38,6 +38,9 @@ HISTFILE=~/.history
 export PATH=~/.bin:$PATH
 export PATH=~/.dotfiles/bin:$PATH
 
+source ~/.dotfiles/zsh/lib/zsh-git-prompt/zshrc.sh
+# an example prompt
+PROMPT='%B%m%~%b$(git_super_status) %# '
 # enable fzf
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 # source google cloud sdk files

@@ -1,2 +1,2 @@
 - tmux session colors
-- zsh git prompt
+x zsh git prompt
