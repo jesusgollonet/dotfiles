@@ -1,0 +1,31 @@
+#!/bin/bash
+
+COLOURS=/Users/jgb/.dotfiles/tmux/config/colours
+
+get_tmux_session_id(){
+    tmux display-message -p '#{session_id}' | cut -d '$' -f2
+}
+
+set_background_colour(){ 
+    local colour_number
+    colour_number="$1"
+    tmux set status-bg colour"$colour_number"
+}
+
+get_colour_number(){
+    local colour_index num_colours normalized_index
+    colour_index="$1"
+    num_colours=$(wc -l < "$COLOURS" | awk '{print $1}')
+    normalized_index=$(( 1 + $((colour_index % num_colours))))
+    sed "$normalized_index!d" "$COLOURS"
+}
+
+main(){
+    local tmux_session_id colour_number
+    tmux_session_id=$(get_tmux_session_id)
+    colour_number=$(get_colour_number "$tmux_session_id")
+    set_background_colour "$colour_number"
+}
+
+
+main
