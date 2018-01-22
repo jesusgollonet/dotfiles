@@ -5,6 +5,7 @@ set -e
 main(){
    local command=$1
    tmux split-window -v -p 15 "$command"
+   tmux last-pane
 }
 
 main "$1"

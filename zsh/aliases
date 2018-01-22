@@ -32,6 +32,9 @@ alias de='docker exec'
 alias drm='docker rm'
 alias drmi='docker rmi'
 
+# chrome
+alias chrome='/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome'
+
 # ls
 alias l='ls -laG'
 
