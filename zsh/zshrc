@@ -21,6 +21,9 @@ zle -N edit-command-line
 bindkey '^xe' edit-command-line
 bindkey '^x^e' edit-command-line
 
+# ignore case in completion
+zstyle ':completion:*' matcher-list '' 'm:{a-z}={A-Z}' '+m:{A-Z}={a-z}'
+
 . ~/.dotfiles/zsh/keys
 . ~/.dotfiles/zsh/aliases
 . ~/.dotfiles/zsh/functions
