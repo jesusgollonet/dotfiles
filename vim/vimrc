@@ -34,6 +34,9 @@ Plug 'airblade/vim-gitgutter'
 Plug 'scrooloose/nerdcommenter'
 Plug 'tpope/vim-surround'
 Plug 'sbdchd/neoformat'
+Plug 'prettier/vim-prettier', { 'tag': '0.2.7' }
+
+"Plug 'prettier/vim-prettier', {'do': 'yarn install'}
 Plug 'suan/vim-instant-markdown'
 
 " Add plugins to &runtimepath
@@ -156,7 +159,12 @@ let g:syntastic_javascript_eslint_exec = 'eslint_d'
 "let g:syntastic_check_on_open=1
 let g:syntastic_always_populate_loc_list=1
 "let g:syntastic_auto_loc_list=1
-"
+
 let g:omni_sql_no_default_maps = 1
 
 let g:elm_format_autosave = 1
+
+let g:prettier#config#parser = 'babylon'
+let g:prettier#autoformat = 0
+autocmd BufWritePre *.js,*.json,*.css,*.scss,*.less,*.graphql Prettier
+
