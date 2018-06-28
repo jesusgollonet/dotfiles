@@ -10,6 +10,7 @@ set_background_colour(){
     local colour_number
     colour_number="$1"
     tmux set status-bg colour"$colour_number"
+    tmux set status-fg colour"255"
 }
 
 get_colour_number(){
