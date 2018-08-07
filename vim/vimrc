@@ -39,6 +39,9 @@ Plug 'prettier/vim-prettier', { 'tag': '0.2.7' }
 "Plug 'prettier/vim-prettier', {'do': 'yarn install'}
 Plug 'suan/vim-instant-markdown'
 
+Plug 'hashivim/vim-terraform'
+Plug 'vim-scripts/indentpython.vim'
+
 " Add plugins to &runtimepath
 call plug#end()
 
