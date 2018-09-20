@@ -44,3 +44,16 @@ alias ...='cd ../..'
 alias ....='cd ../../..'
 
 alias o="open"
+
+alias serverless="nocorrect serverless"
+
+alias tf="terraform"
+alias tfi="terraform init"
+alias tfp="terraform plan"
+alias tfa="terraform apply"
+alias tfd="terraform destroy"
+
+alias npx="nocorrect npx"
+
+alias c="pbcopy"
+alias p="pbpaste"
