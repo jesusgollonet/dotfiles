@@ -1,0 +1,8 @@
+#!/bin/bash
+
+main(){
+    local string="$1"
+    node -e "console.log(encodeURIComponent('$string'))"
+}
+
+main "$1"
