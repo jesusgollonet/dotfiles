@@ -46,6 +46,7 @@ Plug 'junegunn/vim-xmark', { 'do': 'make' }
 Plug 'hashivim/vim-terraform'
 Plug 'vim-scripts/indentpython.vim'
 
+Plug 'goodell/vim-mscgen'
 " Add plugins to &runtimepath
 call plug#end()
 
