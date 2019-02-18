@@ -50,3 +50,8 @@ resn_clone(){
     repo_name=$1
     git clone jesusgollonet@bitbucket.org:resn/"$repo_name".git
 }
+
+function gi() { 
+    curl -sLw "\n" https://www.gitignore.io/api/$@ ;
+}
+    
