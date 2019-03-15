@@ -1,0 +1,15 @@
+#!/bin/bash
+
+echo "bin/in"
+
+main(){
+    local dirname="$1"
+    echo "$dirname"
+    shift
+    local command_list="$*"
+    echo "in $dirname: $command_list"
+    (cd "$dirname" && eval "$command_list")
+}
+
+main "$@"
+

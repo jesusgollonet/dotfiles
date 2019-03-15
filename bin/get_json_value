@@ -6,4 +6,4 @@ main(){
     node -e "console.log(require('./$relative_json_path').$key_name)"
 }
 
-main "$1" "$2"
+main "${1?please provide json file}" "${2?please provide a key name}"
