@@ -22,6 +22,9 @@ Plug 'digitaltoad/vim-pug'
 Plug 'elmcast/elm-vim'
 " elm
 Plug 'raichoo/purescript-vim'
+
+" rust
+Plug 'rust-lang/rust.vim'
 " json
 Plug 'elzr/vim-json'
 " yaml
@@ -181,3 +184,7 @@ autocmd BufWritePre *.js,*.json,*.css,*.scss,*.less,*.graphql Prettier
 " vim-terraform
 let g:terraform_align=1
 let g:terraform_fmt_on_save=1
+
+" rust
+let g:rustfmt_autosave = 1
+let g:syntastic_rust_checkers = ['rustc']
