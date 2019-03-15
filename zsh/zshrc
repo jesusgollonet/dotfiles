@@ -62,3 +62,6 @@ export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 # tabtab source for sls package
 # uninstall by removing these lines or running `tabtab uninstall sls`
 [[ -f /Users/jgb/Work/resn/projects/adidas-rip-ready/dev/adidas-athletics-api/node_modules/tabtab/.completions/sls.zsh ]] && . /Users/jgb/Work/resn/projects/adidas-rip-ready/dev/adidas-athletics-api/node_modules/tabtab/.completions/sls.zsh
+# tabtab source for slss package
+# uninstall by removing these lines or running `tabtab uninstall slss`
+[[ -f /Users/jgb/Work/resn/projects/adidas-loop-event/test/01-passcode-to-contentful/node_modules/tabtab/.completions/slss.zsh ]] && . /Users/jgb/Work/resn/projects/adidas-loop-event/test/01-passcode-to-contentful/node_modules/tabtab/.completions/slss.zsh
