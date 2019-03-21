@@ -42,6 +42,7 @@ Plug 'prettier/vim-prettier', { 'tag': '0.2.7' }
 
 "Plug 'prettier/vim-prettier', {'do': 'yarn install'}
 "Plug 'suan/vim-instant-markdown'
+Plug 'reedes/vim-pencil'
 
 Plug 'junegunn/goyo.vim'
 Plug 'junegunn/vim-xmark', { 'do': 'make' }
@@ -158,6 +159,8 @@ set smartindent
 set tabstop=4
 set shiftwidth=4
 set expandtab
+
+set encoding=utf-8
 
 set updatetime=100
 
