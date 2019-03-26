@@ -12,6 +12,8 @@ main(){
 cat << EOF > "$bin_name" 
 #!/bin/bash
 
+set -e
+
 echo "$bin_name"
 
 main(){

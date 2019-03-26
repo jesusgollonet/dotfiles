@@ -9,6 +9,7 @@ call plug#begin('~/.vim/plugged')
 "Plug 'jelera/vim-javascript-syntax' Highlighting is broken for template
 "strings 
 Plug 'pangloss/vim-javascript'
+Plug 'posva/vim-vue'
 "Plug 'Quramy/vim-js-pretty-template'
 Plug 'nathanaelkane/vim-indent-guides'
 Plug 'Raimondi/delimitMate'
