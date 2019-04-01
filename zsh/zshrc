@@ -6,7 +6,7 @@ promptinit
 autoload -Uz compinit
 compinit
 
-prompt off
+prompt pure
 
 # history search with arrows 
 autoload -U up-line-or-beginning-search
