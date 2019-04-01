@@ -1,0 +1,12 @@
+#!/bin/bash
+
+set -e
+
+echo "install-npm-global-packages"
+
+main(){
+    npm i -g prettier eslint purge
+}
+
+main
+
