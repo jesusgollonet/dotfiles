@@ -29,7 +29,6 @@ zstyle ':completion:*' matcher-list '' 'm:{a-z}={A-Z}' '+m:{A-Z}={a-z}'
 . ~/.dotfiles/zsh/functions
 . ~/.dotfiles/zsh/setopt
 . ~/.dotfiles/tmux/aliases
-. ~/.bin/z.sh
 
 HISTSIZE=10000
 SAVEHIST=10000
@@ -46,22 +45,15 @@ export PATH=~/.dotfiles/bin:$PATH
 PROMPT='%B%#%b '
 # enable fzf
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-# source google cloud sdk files
-[ -f ~/.google-cloud-sdk/completion.zsh.inc ] && source ~/.google-cloud-sdk/completion.zsh.inc
-[ -f ~/.google-cloud-sdk/path.zsh.inc ] && source ~/.google-cloud-sdk/path.zsh.inc
+
+# Move next only if `homebrew` is installed
+if command -v brew >/dev/null 2>&1; then
+    # Load rupa's z if installed
+    [ -f $(brew --prefix)/etc/profile.d/z.sh ] && source $(brew --prefix)/etc/profile.d/z.sh
+fi
+
 # Setting ag as the default source for fzf
 export FZF_DEFAULT_COMMAND='find .'
 # To apply the command to CTRL-T as well
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 
-# load z
-
-# tabtab source for serverless package
-# uninstall by removing these lines or running `tabtab uninstall serverless`
-[[ -f /Users/jgb/Work/resn/projects/adidas-rip-ready/dev/adidas-athletics-api/node_modules/tabtab/.completions/serverless.zsh ]] && . /Users/jgb/Work/resn/projects/adidas-rip-ready/dev/adidas-athletics-api/node_modules/tabtab/.completions/serverless.zsh
-# tabtab source for sls package
-# uninstall by removing these lines or running `tabtab uninstall sls`
-[[ -f /Users/jgb/Work/resn/projects/adidas-rip-ready/dev/adidas-athletics-api/node_modules/tabtab/.completions/sls.zsh ]] && . /Users/jgb/Work/resn/projects/adidas-rip-ready/dev/adidas-athletics-api/node_modules/tabtab/.completions/sls.zsh
-# tabtab source for slss package
-# uninstall by removing these lines or running `tabtab uninstall slss`
-[[ -f /Users/jgb/Work/resn/projects/adidas-loop-event/test/01-passcode-to-contentful/node_modules/tabtab/.completions/slss.zsh ]] && . /Users/jgb/Work/resn/projects/adidas-loop-event/test/01-passcode-to-contentful/node_modules/tabtab/.completions/slss.zsh

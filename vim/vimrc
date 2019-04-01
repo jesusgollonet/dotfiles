@@ -4,6 +4,7 @@ set nocompatible
 call plug#begin('~/.vim/plugged')
 
 " Make sure you use single quotes
+Plug 'junegunn/seoul256.vim'
 
 " js
 "Plug 'jelera/vim-javascript-syntax' Highlighting is broken for template
