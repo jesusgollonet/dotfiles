@@ -27,4 +27,7 @@ brew "ag"
 brew "httpie"
 brew "mosh"
 brew "shellcheck"
-
+brew "git-lfs"
+brew "tree"
+brew "pstree"
+brew "coreutils"
