@@ -1,0 +1,14 @@
+#!/bin/bash
+
+set -e
+
+echo "install"
+
+main(){
+    xcode-select --install
+    brew bundle
+    bash install-npm-global-packages
+}
+
+main
+
