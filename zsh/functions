@@ -25,6 +25,8 @@ tmux_go_to_session_num() {
 }
 
 #sketch. Create a timestamp_name folder in ~/Temp
+
+#sketch. Create a timestamp_name folder in ~/Temp
 sketch(){
     local sketch_name
     local dir_name
@@ -35,7 +37,7 @@ sketch(){
     fi
     dir_name="$(date +"%Y-%m-%d_%H.%M.%S")$sketch_name" 
 
-    tmp_dir=~/Tmp/"$dir_name"
+    tmp_dir=~/Sketch/"$dir_name"
     mkdir "$tmp_dir" && cd "$tmp_dir" && pwd
 }
 
