@@ -56,4 +56,7 @@ fi
 export FZF_DEFAULT_COMMAND='find .'
 # To apply the command to CTRL-T as well
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
-
+# Mosh needs locale 
+export LC_ALL=en_US.UTF-8
+export LANG=en_US.UTF-8
+export LANGUAGE=en_US.UTF-8
