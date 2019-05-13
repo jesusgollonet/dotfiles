@@ -9,8 +9,8 @@ get_tmux_session_id(){
 set_background_colour(){ 
     local colour_number
     colour_number="$1"
-    tmux set status-bg colour"$colour_number"
-    tmux set status-fg colour"0"
+    tmux set status-style bg=colour"$colour_number",fg=colour0
+    #tmux set status-style fg=colour"0"
 }
 
 get_colour_number(){
