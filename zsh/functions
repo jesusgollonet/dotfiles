@@ -51,7 +51,14 @@ resn_clone(){
     git clone jesusgollonet@bitbucket.org:resn/"$repo_name".git
 }
 
+open_or_foreground_vim(){
+    if jobs | grep -q "vim"; then 
+        fg %?vi
+    else 
+        vi .
+    fi
+}
+
 function gi() { 
     curl -sLw "\n" https://www.gitignore.io/api/$@ ;
 }
-    
