@@ -40,9 +40,8 @@ Plug 'airblade/vim-gitgutter'
 Plug 'scrooloose/nerdcommenter'
 Plug 'tpope/vim-surround'
 Plug 'sbdchd/neoformat'
-Plug 'prettier/vim-prettier', { 'tag': '0.2.7' }
+Plug 'prettier/vim-prettier', { 'do': 'yarn install' }
 
-"Plug 'prettier/vim-prettier', {'do': 'yarn install'}
 "Plug 'suan/vim-instant-markdown'
 Plug 'reedes/vim-pencil'
 
@@ -53,6 +52,7 @@ Plug 'hashivim/vim-terraform'
 Plug 'vim-scripts/indentpython.vim'
 
 Plug 'goodell/vim-mscgen'
+Plug 'supercollider/scvim'
 " Add plugins to &runtimepath
 call plug#end()
 
@@ -184,7 +184,7 @@ let g:elm_format_autosave = 1
 
 let g:prettier#config#parser = 'babylon'
 let g:prettier#autoformat = 0
-autocmd BufWritePre *.js,*.json,*.css,*.scss,*.less,*.graphql Prettier
+autocmd BufWritePre *.html,*.js,*.mjs,*.json,*.css,*.scss,*.less,*.vue,*.graphql Prettier
 
 " vim-terraform
 let g:terraform_align=1
@@ -193,3 +193,9 @@ let g:terraform_fmt_on_save=1
 " rust
 let g:rustfmt_autosave = 1
 let g:syntastic_rust_checkers = ['rustc']
+
+" scvim
+"let g:scFlash = 1
+"let g:scTerminalBuffer = "on" 
+"let g:scSplitDirection = "h" 
+"let g:scSplitSize = 40 

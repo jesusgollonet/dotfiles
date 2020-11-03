@@ -47,6 +47,7 @@ alias o="open"
 
 alias serverless="nocorrect serverless"
 
+alias tf2="terraform12"
 alias tf="terraform"
 alias tfi="terraform init"
 alias tfp="terraform plan"

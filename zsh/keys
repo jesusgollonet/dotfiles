@@ -34,3 +34,4 @@ bindkey -s '^[[20~' 'tmux attach\n'
 bindkey -s '^[[19~' 'tmux ls\n'
 # F12 sends process to foreground (mostly for vim)
 bindkey -s '^[[24~' 'open_or_foreground_vim\n'
+#bindkey '^[[24~' open_or_foreground_vim

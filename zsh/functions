@@ -55,10 +55,10 @@ open_or_foreground_vim(){
     if jobs | grep -q "vim"; then 
         fg %?vi
     else 
-        vi .
+        vi 
     fi
 }
-
+#zle -N open_or_foreground_vim
 function gi() { 
     curl -sLw "\n" https://www.gitignore.io/api/$@ ;
 }
