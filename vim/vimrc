@@ -53,6 +53,14 @@ Plug 'vim-scripts/indentpython.vim'
 
 Plug 'goodell/vim-mscgen'
 Plug 'supercollider/scvim'
+
+Plug 'jparise/vim-graphql'
+Plug 'yuezk/vim-js'
+Plug 'maxmellon/vim-jsx-pretty'
+
+Plug 'tpope/vim-liquid'
+
+Plug 'z0mbix/vim-shfmt', { 'for': 'sh' }
 " Add plugins to &runtimepath
 call plug#end()
 
@@ -72,6 +80,7 @@ syntax on
 filetype on
 filetype plugin indent on
 au BufNewFile,BufRead *.dust set filetype=html
+au BufNewFile,BufRead *.liquid set filetype=liquid
 "au FileType javascript JsPreTmpl html
 au BufRead,BufNewFile *.md setlocal textwidth=80
 
@@ -125,6 +134,7 @@ nnoremap <C-H> <C-W><C-H>
 
 " FZF config
 nnoremap <silent> <C-t> :Files<CR>
+nnoremap <silent> <C-b> :Buffers<CR>
 
 " open splits where it makes sense
 set splitbelow
@@ -184,7 +194,7 @@ let g:elm_format_autosave = 1
 
 let g:prettier#config#parser = 'babylon'
 let g:prettier#autoformat = 0
-autocmd BufWritePre *.html,*.js,*.mjs,*.json,*.css,*.scss,*.less,*.vue,*.graphql Prettier
+autocmd BufWritePre *.html,*.js,*.mjs,*.json,*.css,*.scss,*.less,*.vue,*.graphql Neoformat
 
 " vim-terraform
 let g:terraform_align=1
@@ -193,6 +203,8 @@ let g:terraform_fmt_on_save=1
 " rust
 let g:rustfmt_autosave = 1
 let g:syntastic_rust_checkers = ['rustc']
+let g:shfmt_fmt_on_save = 1
+let g:shfmt_extra_args = '-i 2'
 
 " scvim
 "let g:scFlash = 1
