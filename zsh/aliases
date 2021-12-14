@@ -4,10 +4,9 @@ alias s='source ~/.zshrc'
 
 # vim
 # use brew vim over system vim
-alias vim='/usr/local/bin/vim'
-alias vi='/usr/local/bin/vim'
-alias v='/usr/local/bin/vim'
-
+# alias vim='/usr/local/bin/vim'
+# alias vi='/usr/local/bin/vim'
+# alias v='/usr/local/bin/vim'
 # git
 alias g='git'
 alias gs='git status'
