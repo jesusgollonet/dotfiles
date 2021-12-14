@@ -4,7 +4,7 @@
 [push]
   default = simple
 [core]
-  editor = /usr/local/bin/vim
+  editor = /usr/bin/vim
 [alias]
   lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
   st = status
@@ -32,3 +32,5 @@
 	required = true
 [http]
 	cookiefile = /Users/jgb/.gitcookies
+[url "git@github.com:"]
+	insteadOf = https://github.com/
