@@ -1,18 +1,23 @@
 #!/bin/zsh
 
+fpath+=$HOME/.zsh/pure
+
 autoload -Uz promptinit
 promptinit
+prompt pure
 
 autoload -Uz compinit
 compinit
 
-prompt pure
 
 # history search with arrows 
 autoload -U up-line-or-beginning-search
 autoload -U down-line-or-beginning-search
 zle -N up-line-or-beginning-search
 zle -N down-line-or-beginning-search
+
+# map ctrl R to history search as it's failing on ubuntu
+bindkey '^r' history-incremental-search-backward
 
 # Enable Ctrl-x-e to edit command line
 autoload -U edit-command-line
@@ -50,6 +55,8 @@ PROMPT='%B%#%b '
 if command -v brew >/dev/null 2>&1; then
     # Load rupa's z if installed
     [ -f $(brew --prefix)/etc/profile.d/z.sh ] && source $(brew --prefix)/etc/profile.d/z.sh
+else
+    . ~/.dotfiles/bin/z.sh
 fi
 
 # Setting ag as the default source for fzf
