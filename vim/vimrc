@@ -59,6 +59,8 @@ Plug 'yuezk/vim-js'
 Plug 'maxmellon/vim-jsx-pretty'
 
 Plug 'tpope/vim-liquid'
+Plug 'jvirtanen/vim-hcl'
+Plug 'hashivim/vim-packer'
 
 Plug 'z0mbix/vim-shfmt', { 'for': 'sh' }
 " Add plugins to &runtimepath
