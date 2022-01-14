@@ -41,6 +41,7 @@ Plug 'scrooloose/nerdcommenter'
 Plug 'tpope/vim-surround'
 Plug 'sbdchd/neoformat'
 Plug 'prettier/vim-prettier', { 'do': 'yarn install' }
+Plug 'editorconfig/editorconfig-vim'
 
 "Plug 'suan/vim-instant-markdown'
 Plug 'reedes/vim-pencil'
