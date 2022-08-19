@@ -3,10 +3,13 @@
 ## How to install
 
 - clone this repo
-- move to `~/.dotfiles`
+- move to `~/.dotfiles` (paths are currently hardcoded)
 - ```bash
 cd ~
-ln -s ~/.dotfiles/zsh/zshrc 
+# symlink zshrc 
+ln -s ~/.dotfiles/zsh/zshrc .zshrc
+# install pure prompt
+brew install pure 
 ```
 
 
