@@ -1,5 +1,6 @@
 #!/bin/zsh
 
+bindkey '^R' history-incremental-search-backward
 #http://floatleft.com/notebook/mac-like-text-navigation-in-zsh
 # Skip forward/back a word with opt-arrow
 bindkey '[C' forward-word
