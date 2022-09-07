@@ -16,8 +16,6 @@ ln -s ~/.dotfiles/zsh/zshrc .zshrc
 
 ln -s ~/.dotfiles/git/gitconfig .gitconfig
 
-ln -s ~/.dotfiles/vim/vimrc .vimrc
-
 ln -s ~/.dotfiles/tmux/tmux.conf .tmux.conf
 
 # install vim-plug then all vim plugins
@@ -26,4 +24,4 @@ curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.c
 
 vim -c PlugInstall
 
-```
+ln -s ~/.dotfiles/vim/vimrc .vimrc
