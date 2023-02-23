@@ -58,6 +58,8 @@ Plug 'supercollider/scvim'
 Plug 'jparise/vim-graphql'
 Plug 'yuezk/vim-js'
 Plug 'maxmellon/vim-jsx-pretty'
+Plug 'leafgarland/typescript-vim'
+Plug 'neoclide/coc.nvim', {'branch': 'release'}
 
 Plug 'tpope/vim-liquid'
 Plug 'jvirtanen/vim-hcl'
@@ -214,3 +216,5 @@ let g:shfmt_extra_args = '-i 2'
 "let g:scTerminalBuffer = "on" 
 "let g:scSplitDirection = "h" 
 "let g:scSplitSize = 40 
+" CoC extensions
+let g:coc_global_extensions = ['coc-tsserver']
