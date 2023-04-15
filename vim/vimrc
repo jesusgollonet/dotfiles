@@ -147,6 +147,10 @@ nnoremap <silent> <C-b> :Buffers<CR>
 set splitbelow
 set splitright
 
+imap <silent><script><expr> <C-E> copilot#Accept("\<CR>")
+let g:copilot_no_tab_map = v:true
+
+set updatetime=100
 " line numbers
 set number
 " allow unwritten buffers to be 'closed'
