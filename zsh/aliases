@@ -59,3 +59,6 @@ alias npx="nocorrect npx"
 
 alias c="pbcopy"
 alias p="pbpaste"
+
+alias python="python3"
+alias pip="pip3"
