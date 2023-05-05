@@ -43,10 +43,7 @@ Plug 'tpope/vim-surround'
 Plug 'sbdchd/neoformat'
 Plug 'prettier/vim-prettier', { 'do': 'yarn install' }
 
-Plug 'github/copilot.vim'
-"Plug 'editorconfig/editorconfig-vim'
 
-"Plug 'suan/vim-instant-markdown'
 Plug 'reedes/vim-pencil'
 
 Plug 'junegunn/goyo.vim'
@@ -148,9 +145,6 @@ nnoremap <silent> <C-b> :Buffers<CR>
 " open splits where it makes sense
 set splitbelow
 set splitright
-
-imap <silent><script><expr> <C-E> copilot#Accept("\<CR>")
-let g:copilot_no_tab_map = v:true
 
 set updatetime=100
 " line numbers
