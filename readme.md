@@ -14,6 +14,8 @@ cd ~
 
 ln -s ~/.dotfiles/zsh/zshrc .zshrc
 
+ln -s ~/.dotfiles/zsh/zshenv .zshenv
+
 ln -s ~/.dotfiles/git/gitconfig .gitconfig
 
 ln -s ~/.dotfiles/tmux/tmux.conf .tmux.conf
