@@ -8,6 +8,7 @@
 [alias]
   lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
   st = status
+  lsu = ls-files --others --exclude-standard
 [color]
   branch = auto
   diff = auto
