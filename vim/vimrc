@@ -50,7 +50,7 @@ Plug 'junegunn/goyo.vim'
 Plug 'junegunn/vim-xmark', { 'do': 'make' }
 
 Plug 'hashivim/vim-terraform'
-Plug 'vim-scripts/indentpython.vim'
+Plug 'psf/black', { 'branch': 'stable' }
 
 Plug 'goodell/vim-mscgen'
 Plug 'supercollider/scvim'
@@ -215,6 +215,11 @@ let g:elm_format_autosave = 1
 let g:prettier#config#parser = 'babylon'
 let g:prettier#autoformat = 0
 autocmd BufWritePre *.html,*.js,*.mjs,*.json,*.css,*.scss,*.less,*.vue,*.graphql,*.ts Neoformat
+" python autoformatting
+augroup black_on_save
+  autocmd!
+  autocmd BufWritePre *.py Black
+augroup end
 
 " vim-terraform
 let g:terraform_align=1
