@@ -65,6 +65,7 @@ Plug 'github/copilot.vim'
 Plug 'tpope/vim-liquid'
 Plug 'jvirtanen/vim-hcl'
 Plug 'hashivim/vim-packer'
+Plug 'isobit/vim-caddyfile'
 
 Plug 'z0mbix/vim-shfmt', { 'for': 'sh' }
 " Add plugins to &runtimepath
