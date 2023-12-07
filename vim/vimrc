@@ -61,6 +61,7 @@ Plug 'maxmellon/vim-jsx-pretty'
 Plug 'leafgarland/typescript-vim'
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
 Plug 'github/copilot.vim'
+Plug 'Exafunction/codeium.vim'
 
 Plug 'tpope/vim-liquid'
 Plug 'jvirtanen/vim-hcl'
