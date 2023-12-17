@@ -2,3 +2,4 @@
 # if I make my shell zsh, zshenv will be loaded and therefore available in vim  
 . ~/.dotfiles/zsh/aliases
 . ~/.dotfiles/tmux/aliases
+. "$HOME/.cargo/env"
