@@ -25,6 +25,9 @@ Plug 'mattn/emmet-vim'
 "Plug 'elmcast/elm-vim'
 "" elm
 "Plug 'raichoo/purescript-vim'
+" go
+Plug 'fatih/vim-go'
+
 
 " rust
 Plug 'rust-lang/rust.vim'
@@ -60,8 +63,16 @@ Plug 'yuezk/vim-js'
 Plug 'maxmellon/vim-jsx-pretty'
 Plug 'leafgarland/typescript-vim'
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
-Plug 'github/copilot.vim'
+"Plug 'github/copilot.vim'
 Plug 'Exafunction/codeium.vim'
+" Using vim-plug
+Plug 'sourcegraph/sg.nvim', { 'do': 'nvim -l build/init.lua' }
+
+" Required for various utilities
+Plug 'nvim-lua/plenary.nvim'
+
+" Required if you want to use some of the search functionality
+Plug 'nvim-telescope/telescope.nvim'
 
 Plug 'tpope/vim-liquid'
 Plug 'jvirtanen/vim-hcl'
@@ -284,6 +295,6 @@ function! NERDCommenter_after()
   endif
 endfunction
 
-imap <silent><script><expr> <C-e> copilot#Accept('\<CR>')
-let g:copilot_no_tab_map = v:true
+"imap <silent><script><expr> <C-e> copilot#Accept('\<CR>')
+"let g:copilot_no_tab_map = v:true
 
