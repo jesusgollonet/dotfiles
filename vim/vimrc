@@ -66,7 +66,7 @@ Plug 'neoclide/coc.nvim', {'branch': 'release'}
 "Plug 'github/copilot.vim'
 Plug 'Exafunction/codeium.vim'
 " Using vim-plug
-Plug 'sourcegraph/sg.nvim', { 'do': 'nvim -l build/init.lua' }
+"Plug 'sourcegraph/sg.nvim', { 'do': 'nvim -l build/init.lua' }
 
 " Required for various utilities
 Plug 'nvim-lua/plenary.nvim'
@@ -227,7 +227,7 @@ let g:elm_format_autosave = 1
 
 let g:prettier#config#parser = 'babylon'
 let g:prettier#autoformat = 0
-autocmd BufWritePre *.html,*.js,*.mjs,*.json,*.css,*.scss,*.less,*.vue,*.graphql,*.ts Neoformat
+autocmd BufWritePre *.html,*.js,*.mjs,*.json,*.css,*.scss,*.less,*.vue,*.graphql,*.ts,*.tsx Neoformat
 " python autoformatting
 augroup black_on_save
   autocmd!
