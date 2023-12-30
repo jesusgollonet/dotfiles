@@ -183,7 +183,9 @@ set noswapfile
 " dont wrap lines
 set nowrap
 " show newlines as $
-set list
+" removed for go as per
+" https://stackoverflow.com/questions/39091918/hiding-tab-characters-in-vim
+"set list
 " osx clipboard
 set clipboard=unnamed
 " 4 spaces by default
