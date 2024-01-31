@@ -62,3 +62,20 @@ open_or_foreground_vim(){
 function gi() { 
     curl -sLw "\n" https://www.gitignore.io/api/$@ ;
 }
+
+
+## adding key commands to some zsh functions
+
+function show_github_web(){
+    gh repo view --web & wait
+}
+
+function list_github_issues(){
+    gh issue list 
+}
+
+zle -N show_github_web
+zle -N list_github_issues
+
+bindkey '^W' show_github_web
+bindkey '^L' list_github_issues
