@@ -1,4 +1,5 @@
 " This must be first, because it changes other options as side effect
+" Explain what each of these lines does, excluding comments
 set nocompatible
 
 call plug#begin('~/.vim/plugged')
@@ -18,6 +19,7 @@ Plug 'scrooloose/syntastic'
 Plug 'dense-analysis/ale'
 " html/css
 Plug 'mattn/emmet-vim'
+Plug 'sophacles/vim-processing'
 "Plug 'mustache/vim-mustache-handlebars'
 "Plug 'groenewege/vim-less'
 "Plug 'digitaltoad/vim-pug'
@@ -28,6 +30,9 @@ Plug 'mattn/emmet-vim'
 " go
 Plug 'fatih/vim-go'
 
+" markdown preview
+Plug 'iamcco/markdown-preview.nvim', { 'do': 'cd app && npx --yes yarn install' }
+Plug 'img-paste-devs/img-paste.vim'
 
 " rust
 Plug 'rust-lang/rust.vim'
@@ -44,7 +49,7 @@ Plug 'airblade/vim-gitgutter'
 Plug 'scrooloose/nerdcommenter'
 Plug 'tpope/vim-surround'
 Plug 'sbdchd/neoformat'
-Plug 'prettier/vim-prettier', { 'do': 'yarn install' }
+Plug 'prettier/vim-prettier',  { 'do': 'yarn install --frozen-lockfile --production' }
 
 
 Plug 'reedes/vim-pencil'
@@ -63,8 +68,8 @@ Plug 'yuezk/vim-js'
 Plug 'maxmellon/vim-jsx-pretty'
 Plug 'leafgarland/typescript-vim'
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
-"Plug 'github/copilot.vim'
-Plug 'Exafunction/codeium.vim'
+Plug 'github/copilot.vim'
+"Plug 'Exafunction/codeium.vim'
 " Using vim-plug
 "Plug 'sourcegraph/sg.nvim', { 'do': 'nvim -l build/init.lua' }
 
@@ -227,9 +232,13 @@ let g:omni_sql_no_default_maps = 1
 
 let g:elm_format_autosave = 1
 
-let g:prettier#config#parser = 'babylon'
+let g:prettier#config#parser = ''
 let g:prettier#autoformat = 0
 autocmd BufWritePre *.html,*.js,*.mjs,*.json,*.css,*.scss,*.less,*.vue,*.graphql,*.ts,*.tsx Neoformat
+autocmd FileType markdown nmap <buffer><silent> <leader>p :call mdip#MarkdownClipboardImage()<CR>
+" there are some defaults for image directory and image name, you can change them
+" let g:mdip_imgdir = 'img'
+" let g:mdip_imgname = 'image'
 " python autoformatting
 augroup black_on_save
   autocmd!
@@ -297,6 +306,6 @@ function! NERDCommenter_after()
   endif
 endfunction
 
-"imap <silent><script><expr> <C-e> copilot#Accept('\<CR>')
-"let g:copilot_no_tab_map = v:true
+imap <silent><script><expr> <C-e> copilot#Accept('\<CR>')
+let g:copilot_no_tab_map = v:true
 
