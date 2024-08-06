@@ -85,6 +85,7 @@ Plug 'hashivim/vim-packer'
 Plug 'isobit/vim-caddyfile'
 
 Plug 'z0mbix/vim-shfmt', { 'for': 'sh' }
+Plug 'tidalcycles/vim-tidal'
 " Add plugins to &runtimepath
 call plug#end()
 
