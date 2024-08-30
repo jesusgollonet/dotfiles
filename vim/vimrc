@@ -257,6 +257,8 @@ let g:shfmt_fmt_on_save = 1
 let g:shfmt_extra_args = '-i 2'
 
 " scvim
+au BufEnter,BufWinEnter,BufNewFile,BufRead *.sc,*.scd set filetype=supercollider
+au Filetype supercollider packadd scvim
 "let g:scFlash = 1
 "let g:scTerminalBuffer = "on" 
 "let g:scSplitDirection = "h" 

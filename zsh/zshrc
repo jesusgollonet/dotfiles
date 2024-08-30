@@ -70,3 +70,8 @@ export NVM_DIR="$HOME/.nvm"
 eval "$(atuin init zsh)"
 
 [ -f "/Users/jgb/.ghcup/env" ] && . "/Users/jgb/.ghcup/env" # ghcup-env
+
+export DENO_INSTALL="/Users/jgb/.deno"
+export PATH="$DENO_INSTALL/bin:$PATH"
+
+eval "$(direnv hook zsh)"
