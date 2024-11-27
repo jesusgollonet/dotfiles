@@ -15,8 +15,8 @@ Plug 'posva/vim-vue'
 "Plug 'Quramy/vim-js-pretty-template'
 Plug 'nathanaelkane/vim-indent-guides'
 Plug 'Raimondi/delimitMate'
-Plug 'scrooloose/syntastic'
-Plug 'dense-analysis/ale'
+"Plug 'scrooloose/syntastic'
+"Plug 'dense-analysis/ale'
 " html/css
 Plug 'mattn/emmet-vim'
 Plug 'sophacles/vim-processing'
@@ -210,24 +210,24 @@ if filereadable(".vimrc.local")
 endif
 " config ----------
 " syntastic
-let g:syntastic_javascript_checkers = ['eslint']
-let g:syntastic_javascript_eslint_exec = 'eslint_d'
-"let g:syntastic_check_on_open=1
-let g:syntastic_always_populate_loc_list=1
+"let g:syntastic_javascript_checkers = ['eslint']
+"let g:syntastic_javascript_eslint_exec = 'eslint_d'
+""let g:syntastic_check_on_open=1
+"let g:syntastic_always_populate_loc_list=1
 "let g:syntastic_auto_loc_list=1
-let g:ale_fixers = {
-    \   'javascript': ['eslint'],
-    \}
-let g:ale_linters = {
-    \   'javascript': ['eslint'],
-    \}
-let g:ale_fix_on_save = 1
-let g:ale_sign_error = '>>'
-let g:ale_sign_warning = '--'
-let g:ale_echo_msg_error_str = 'E'
-let g:ale_echo_msg_warning_str = 'W'
-let g:ale_echo_msg_format = '[%linter%] %s [%severity%]'
-let g:ale_python_flake8_options = '--max-line-length 88 --extend-ignore=E203'
+"let g:ale_fixers = {
+    "\   'javascript': ['eslint'],
+    "\}
+"let g:ale_linters = {
+    "\   'javascript': ['eslint'],
+    "\}
+"let g:ale_fix_on_save = 1
+"let g:ale_sign_error = '>>'
+"let g:ale_sign_warning = '--'
+"let g:ale_echo_msg_error_str = 'E'
+"let g:ale_echo_msg_warning_str = 'W'
+"let g:ale_echo_msg_format = '[%linter%] %s [%severity%]'
+"let g:ale_python_flake8_options = '--max-line-length 88 --extend-ignore=E203'
 
 let g:omni_sql_no_default_maps = 1
 
@@ -235,6 +235,10 @@ let g:elm_format_autosave = 1
 
 let g:prettier#config#parser = ''
 let g:prettier#autoformat = 0
+
+let g:ale_disable_lsp = 1
+"let g:syntastic_mode_map = { 'mode': 'passive' }
+let g:html_exclude_tags = ['a-scene', 'a-entity', 'a-camera', 'a-box', 'a-marker']
 autocmd BufWritePre *.html,*.js,*.mjs,*.json,*.css,*.scss,*.less,*.vue,*.graphql,*.ts,*.tsx Neoformat
 autocmd FileType markdown nmap <buffer><silent> <leader>p :call mdip#MarkdownClipboardImage()<CR>
 " there are some defaults for image directory and image name, you can change them
@@ -275,6 +279,29 @@ inoremap <expr><S-TAB> coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"
 " <C-g>u breaks current undo, please make your own choice
 inoremap <silent><expr> <CR> coc#pum#visible() ? coc#pum#confirm()
                               \: "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
+
+
+" Use `[g` and `]g` to navigate diagnostics
+" Use `:CocDiagnostics` to get all diagnostics of current buffer in location list
+nmap <silent> [g <Plug>(coc-diagnostic-prev)
+nmap <silent> ]g <Plug>(coc-diagnostic-next)
+
+" GoTo code navigation
+nmap <silent> gd <Plug>(coc-definition)
+nmap <silent> gy <Plug>(coc-type-definition)
+nmap <silent> gi <Plug>(coc-implementation)
+nmap <silent> gr <Plug>(coc-references)
+
+" Use K to show documentation in preview window
+nnoremap <silent> K :call ShowDocumentation()<CR>
+
+function! ShowDocumentation()
+  if CocAction('hasProvider', 'hover')
+    call CocActionAsync('doHover')
+  else
+    call feedkeys('K', 'in')
+  endif
+endfunction
 
 function! CheckBackspace() abort
   let col = col('.') - 1
