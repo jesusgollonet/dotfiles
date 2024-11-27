@@ -12,6 +12,7 @@ Plug 'junegunn/seoul256.vim'
 "strings 
 Plug 'pangloss/vim-javascript'
 Plug 'posva/vim-vue'
+Plug 'evanleck/vim-svelte', {'branch': 'main'}
 "Plug 'Quramy/vim-js-pretty-template'
 Plug 'nathanaelkane/vim-indent-guides'
 Plug 'Raimondi/delimitMate'
