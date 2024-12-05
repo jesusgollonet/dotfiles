@@ -240,7 +240,7 @@ let g:prettier#autoformat = 0
 let g:ale_disable_lsp = 1
 "let g:syntastic_mode_map = { 'mode': 'passive' }
 let g:html_exclude_tags = ['a-scene', 'a-entity', 'a-camera', 'a-box', 'a-marker']
-autocmd BufWritePre *.html,*.js,*.mjs,*.json,*.css,*.scss,*.less,*.vue,*.graphql,*.ts,*.tsx Neoformat
+autocmd BufWritePre *.html,*.js,*.mjs,*.json,*.css,*.scss,*.less,*.vue,*.graphql,*.ts,*.tsx,*.svelte Neoformat
 autocmd FileType markdown nmap <buffer><silent> <leader>p :call mdip#MarkdownClipboardImage()<CR>
 " there are some defaults for image directory and image name, you can change them
 " let g:mdip_imgdir = 'img'
