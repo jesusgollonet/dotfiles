@@ -65,13 +65,15 @@ function gi() {
 
 
 ## adding key commands to some zsh functions
-
 function show_github_web(){
-    gh repo view --web & wait
+    gh repo view --web 
+    zle reset-prompt
 }
 
 function list_github_issues(){
     gh issue list 
+    echo # just adding a new line to prevent reset-prompt from eating output
+    zle reset-prompt
 }
 
 zle -N show_github_web
