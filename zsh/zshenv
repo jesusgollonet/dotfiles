@@ -3,3 +3,6 @@
 . ~/.dotfiles/zsh/aliases
 . ~/.dotfiles/tmux/aliases
 . "$HOME/.cargo/env"
+
+# uv
+export PATH="/Users/jgb/.local/bin:$PATH"

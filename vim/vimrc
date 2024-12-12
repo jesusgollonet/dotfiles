@@ -70,6 +70,7 @@ Plug 'maxmellon/vim-jsx-pretty'
 Plug 'leafgarland/typescript-vim'
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
 Plug 'github/copilot.vim'
+"Plug 'pasky/claude.vim'
 "Plug 'Exafunction/codeium.vim'
 " Using vim-plug
 "Plug 'sourcegraph/sg.nvim', { 'do': 'nvim -l build/init.lua' }
@@ -340,3 +341,11 @@ endfunction
 imap <silent><script><expr> <C-e> copilot#Accept('\<CR>')
 let g:copilot_no_tab_map = v:true
 
+if filereadable(expand("~/.vim/secrets.vim"))
+  source ~/.vim/secrets.vim
+endif
+
+"let g:claude_map_implement = "<Leader>ci"
+"let g:claude_map_open_chat = "<Leader>cc"
+"let g:claude_map_send_chat_message = "<C-]>"
+"let g:claude_map_cancel_response = "<Leader>cx"
