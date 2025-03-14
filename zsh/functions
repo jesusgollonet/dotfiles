@@ -63,7 +63,6 @@ function gi() {
     curl -sLw "\n" https://www.gitignore.io/api/$@ ;
 }
 
-
 ## adding key commands to some zsh functions
 function show_github_web(){
     gh repo view --web 
@@ -76,8 +75,14 @@ function list_github_issues(){
     zle reset-prompt
 }
 
+function enter_lazygit(){
+    lazygit
+}
+
 zle -N show_github_web
 zle -N list_github_issues
+zle -N enter_lazygit
 
 bindkey '^W' show_github_web
 bindkey '^L' list_github_issues
+bindkey '^G' enter_lazygit
