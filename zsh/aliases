@@ -46,6 +46,7 @@ alias ....='cd ../../..'
 alias o="open"
 
 alias serverless="nocorrect serverless"
+alias sst="nocorrect sst"
 
 alias tf2="terraform12"
 alias tf="terraform"

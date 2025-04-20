@@ -21,15 +21,6 @@ Plug 'Raimondi/delimitMate'
 " html/css
 Plug 'mattn/emmet-vim'
 Plug 'sophacles/vim-processing'
-"Plug 'mustache/vim-mustache-handlebars'
-"Plug 'groenewege/vim-less'
-"Plug 'digitaltoad/vim-pug'
-"" elm
-"Plug 'elmcast/elm-vim'
-"" elm
-"Plug 'raichoo/purescript-vim'
-" go
-Plug 'fatih/vim-go'
 
 " markdown preview
 Plug 'iamcco/markdown-preview.nvim', { 'do': 'cd app && npx --yes yarn install' }
@@ -49,6 +40,7 @@ Plug 'junegunn/fzf.vim'
 Plug 'airblade/vim-gitgutter'
 Plug 'scrooloose/nerdcommenter'
 Plug 'tpope/vim-surround'
+Plug 'tpope/vim-fugitive'
 Plug 'sbdchd/neoformat'
 Plug 'prettier/vim-prettier',  { 'do': 'yarn install --frozen-lockfile --production' }
 
@@ -69,8 +61,10 @@ Plug 'yuezk/vim-js'
 Plug 'maxmellon/vim-jsx-pretty'
 Plug 'leafgarland/typescript-vim'
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
+" AI
 Plug 'github/copilot.vim'
-"Plug 'pasky/claude.vim'
+Plug 'pasky/claude.vim'
+Plug 'nekowasabi/aider.vim' 
 "Plug 'Exafunction/codeium.vim'
 " Using vim-plug
 "Plug 'sourcegraph/sg.nvim', { 'do': 'nvim -l build/init.lua' }
@@ -106,6 +100,8 @@ colorscheme seoul256
 syntax on
 filetype on
 filetype plugin indent on
+runtime macros/matchit.vim " enable matching of brackets in html
+
 au BufNewFile,BufRead *.dust set filetype=html
 au BufNewFile,BufRead *.liquid set filetype=liquid
 "au FileType javascript JsPreTmpl html
@@ -241,7 +237,7 @@ let g:prettier#autoformat = 0
 let g:ale_disable_lsp = 1
 "let g:syntastic_mode_map = { 'mode': 'passive' }
 let g:html_exclude_tags = ['a-scene', 'a-entity', 'a-camera', 'a-box', 'a-marker']
-autocmd BufWritePre *.html,*.js,*.mjs,*.json,*.css,*.scss,*.less,*.vue,*.graphql,*.ts,*.tsx,*.svelte Neoformat
+autocmd BufWritePre *.html,*.js,*.mjs,*.json,*.css,*.scss,*.less,*.vue,*.graphql,*.ts,*.tsx,*.jsx,*.svelte Neoformat
 autocmd FileType markdown nmap <buffer><silent> <leader>p :call mdip#MarkdownClipboardImage()<CR>
 " there are some defaults for image directory and image name, you can change them
 " let g:mdip_imgdir = 'img'
@@ -345,7 +341,7 @@ if filereadable(expand("~/.vim/secrets.vim"))
   source ~/.vim/secrets.vim
 endif
 
-"let g:claude_map_implement = "<Leader>ci"
-"let g:claude_map_open_chat = "<Leader>cc"
-"let g:claude_map_send_chat_message = "<C-]>"
-"let g:claude_map_cancel_response = "<Leader>cx"
+let g:claude_map_implement = "<Leader>ci"
+let g:claude_map_open_chat = "<Leader>cl"
+let g:claude_map_send_chat_message = "<C-]>"
+let g:claude_map_cancel_response = "<Leader>cx"
