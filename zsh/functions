@@ -79,6 +79,13 @@ function enter_lazygit(){
     lazygit
 }
 
+function notify(){
+    local message
+    message=$1
+    terminal-notifier -message "$message" -title "TBD"
+    curl -d "$message" ntfy.sh/rndjgbalert5
+}
+
 zle -N show_github_web
 zle -N list_github_issues
 zle -N enter_lazygit

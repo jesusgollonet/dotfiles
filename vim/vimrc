@@ -248,6 +248,9 @@ augroup black_on_save
   autocmd BufWritePre *.py Black
 augroup end
 
+let g:black_linelength = 88
+let g:black_virtualenv = ''  
+
 " vim-terraform
 let g:terraform_align=1
 let g:terraform_fmt_on_save=1
@@ -345,3 +348,9 @@ let g:claude_map_implement = "<Leader>ci"
 let g:claude_map_open_chat = "<Leader>cl"
 let g:claude_map_send_chat_message = "<C-]>"
 let g:claude_map_cancel_response = "<Leader>cx"
+
+
+" Copy current file path to clipboard
+nnoremap <leader>cp :let @+ = expand('%:p')<CR>
+" Copy current file content to clipboard
+nnoremap <leader>cf :let @+ = join(getline(1, '$'), "\n")<CR>
