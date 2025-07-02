@@ -1,5 +1,4 @@
 #!/bin/bash
-
 alias s='source ~/.zshrc'
 
 # vim
@@ -63,3 +62,5 @@ alias p="pbpaste"
 
 alias python="python3"
 alias pip="pip3"
+
+alias claude="~/.claude/local/claude"

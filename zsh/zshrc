@@ -97,4 +97,6 @@ if [ -f '/Users/jgb/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/jgb/g
 # bun
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
-alias claude="/Users/jgb/.claude/local/claude"
+export PYENV_ROOT="$HOME/.pyenv"
+[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init - zsh)"
