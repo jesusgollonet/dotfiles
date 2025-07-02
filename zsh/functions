@@ -90,6 +90,29 @@ zle -N show_github_web
 zle -N list_github_issues
 zle -N enter_lazygit
 
+# Enhanced tmux project session with optional .tmux.project config
+tnn(){
+    local session_name
+    session_name=$("$PWD")
+    
+    # Create new session with first window
+    tmux new-session -d -s "$session_name" -c "$PWD"
+    
+    # Check for project-specific config
+    if [ -f ".tmux.project" ]; then
+        echo "Using custom .tmux.project config"
+        source .tmux.project
+    else
+        # Default layout: 2 windows, each with 2 panes
+        tmux split-window -h -c "$PWD"
+        tmux new-window -c "$PWD"
+        tmux select-window -t 1
+    fi
+    
+    # Attach to session
+    tmux attach-session -t "$session_name"
+}
+
 bindkey '^W' show_github_web
 bindkey '^L' list_github_issues
 bindkey '^G' enter_lazygit
