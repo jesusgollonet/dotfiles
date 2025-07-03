@@ -93,7 +93,12 @@ zle -N enter_lazygit
 # Enhanced tmux project session with optional .tmux.project config
 tnn(){
     local session_name
-    session_name=$("$PWD")
+    # Use provided name or fall back to directory name
+    if [ -n "$1" ]; then
+        session_name="$1"
+    else
+        session_name=$(basename "$PWD" | tr '[:upper:]' '[:lower:]')
+    fi
     
     # Create new session with first window
     tmux new-session -d -s "$session_name" -c "$PWD"
