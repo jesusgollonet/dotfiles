@@ -354,3 +354,6 @@ let g:claude_map_cancel_response = "<Leader>cx"
 nnoremap <leader>cp :let @+ = expand('%:p')<CR>
 " Copy current file content to clipboard
 nnoremap <leader>cf :let @+ = join(getline(1, '$'), "\n")<CR>
+
+" Preview current markdown file in browser
+nnoremap <leader>mp :MarkdownPreviewToggle<CR>
