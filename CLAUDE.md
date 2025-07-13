@@ -8,74 +8,106 @@ This is a personal dotfiles repository containing shell configurations, custom s
 
 ## Key Architecture
 
-- **Shell Configuration**: Primary shell is zsh with modular configuration split across `/zsh/` directory
-- **Custom Scripts**: Utility scripts in `/bin/` directory for common development tasks
-- **System Setup**: Automated installation scripts using Homebrew and npm
-- **Tmux Configuration**: Custom tmux setup with color schemes and session management
+This dotfiles setup follows a **progressive enhancement** and **context-aware** design philosophy:
+
+### Modular Configuration Pattern
+- **`zshenv`**: Loaded for all shells (including vim), contains aliases and essential PATH setup for universal access
+- **`zshrc`**: Interactive shell configuration that sources modular components (`keys`, `functions`, `setopt`)
+- **Separation strategy**: Ensures vim command mode works with aliases while maintaining clean interactive shell setup
+
+### Integration Philosophy
+Tools are designed to **complement rather than replace** each other:
+- **fzf + ag + z**: Unified search and navigation (fuzzy finding, git-aware filtering, frecency-based jumping)
+- **tmux + vim + git**: Seamless workflow transitions with consistent key bindings
+- **Package managers**: Multiple ecosystems (Homebrew, npm, pyenv, nvm) coordinated through conditional loading
+
+### Context-Aware Behaviors
+- **Tmux integration**: Different key bindings and behaviors inside vs outside tmux sessions
+- **Project-specific configs**: `.tmux.project` pattern allows per-project session customization
+- **Dynamic session coloring**: Each tmux session gets unique colors from `/tmux/config/colours`
 
 ## Installation and Setup Commands
 
+The installation follows a **layered dependency model**:
+
 ```bash
-# Initial system setup (installs Xcode CLI tools, Homebrew packages, npm globals)
+# Complete system setup (orchestrates all package managers)
 ./install
 
-# Install Homebrew packages only
-brew bundle
+# Individual package manager steps:
+brew bundle                           # System tools and applications
+bash install-npm-global-packages     # Development utilities (prettier, eslint)
 
-# Install npm global packages only
-bash install-npm-global-packages
-
-# Symlink dotfiles (manual step after cloning to ~/.dotfiles)
+# Manual symlink step (after cloning to ~/.dotfiles):
 ln -s ~/.dotfiles/zsh/zshrc ~/.zshrc
 ln -s ~/.dotfiles/zsh/zshenv ~/.zshenv
 ln -s ~/.dotfiles/git/gitconfig ~/.gitconfig
 ln -s ~/.dotfiles/tmux/tmux.conf ~/.tmux.conf
 ln -s ~/.dotfiles/vim/vimrc ~/.vimrc
+
+# Reload configuration
+source ~/.zshrc  # or use the 's' alias
 ```
 
-## Custom Shell Functions and Key Bindings
+## Workflow Integration & Key Functions
 
-**Important custom functions:**
-- `sketch()` - Creates timestamped project folders in ~/Sketch
-- `take()` - mkdir + cd in one command
-- `gi()` - Fetch gitignore templates from gitignore.io
-- `notify()` - Send notifications via terminal-notifier and ntfy
+### Unified Development Interface
+The configuration creates a **seamless workflow** through integrated tools:
 
-**Key bindings:**
-- `Ctrl+G` - Launch lazygit
-- `Ctrl+W` - Open GitHub repo in web browser
-- `Ctrl+L` - List GitHub issues
-- `F7/F9` - Attach to tmux session
-- `F8` - List tmux sessions
-- `F12` - Foreground vim or open new instance
+**Navigation & Search:**
+- **fzf + ag**: Git-aware fuzzy finding with `FZF_DEFAULT_COMMAND` excluding `.git` directories
+- **z command**: Frecency-based directory jumping (frequency + recency)
+- **Custom functions**: `sketch()` (timestamped projects), `take()` (mkdir+cd), `gi()` (gitignore templates)
 
-## Path Configuration
+**Git Workflow:**
+- `Ctrl+G` → lazygit (visual git interface)
+- `Ctrl+W` → GitHub web view via `gh` CLI  
+- `Ctrl+L` → GitHub issues list
+- Comprehensive git aliases: `g`, `gs`, `ga`, `gp`, `gl`, `gd`, `gco`, `gc`
 
-The shell adds these directories to PATH:
-- `~/.bin` - Personal binary directory
-- `~/.dotfiles/bin` - Dotfiles utility scripts
-- Various language-specific paths (pyenv, nvm, pnpm, bun, deno)
+**Session Management:**
+- `F7/F9` → Attach to tmux session
+- `F8` → List tmux sessions  
+- `F12` → Foreground vim or open new instance
+- **`tnn()` function**: Intelligent session creation with `.tmux.project` support
 
-## Aliases and Shortcuts
+### Composable Utility Scripts (/bin/)
+Following **Unix philosophy** of small, chainable tools:
+- **`in` & `in_split`**: Directory-scoped command execution (local vs tmux split)
+- **`new_project`**: Project structure creation (dev/doc/test folders)
+- **`note`**: Structured note creation with frontmatter for static site generators
+- **`tmux_mini_split`**: Quick tmux pane creation for monitoring commands
 
-**Git aliases**: `g`, `gs`, `ga`, `gp`, `gl`, `gd`, `gco`, `gc`, etc.
-**Docker aliases**: `d`, `di`, `dps`, `db`, `dr`, etc.  
-**Terraform aliases**: `tf`, `tfi`, `tfp`, `tfa`, `tfd`
-**System**: `l` (ls -laG), `..`, `...`, `c` (pbcopy), `p` (pbpaste)
+## Package Management Coordination
 
-## Development Environment
+**PATH precedence**: Local bins (`~/.bin`, `~/.dotfiles/bin`) come first, followed by language-specific paths
 
-**Editor**: vim (Homebrew version) with vim-plug plugin manager
-**Terminal multiplexer**: tmux with custom configuration
-**Package managers**: Homebrew, npm, pyenv, nvm, pnpm, bun
-**Version control**: Git with gh CLI integration
-**Search tools**: fzf with ag (silver searcher) integration
+**Conditional loading pattern**: Each package manager only loads if installed:
+- **Homebrew**: System tools and applications (`Brewfile`)
+- **npm**: Development utilities (`install-npm-global-packages`)
+- **Language managers**: pyenv, nvm, pnpm, bun, deno (isolated ecosystems)
 
-## Custom Scripts in /bin/
+**Graceful degradation**: Core functionality works without optional dependencies
 
-- `new_project` - Create project structure with dev/doc/test folders
-- `note` - Note-taking utility
-- `tmux_mini_split` - Tmux session management
-- `in` / `in_split` - Directory-based command execution utilities
+## Command Aliases & Shortcuts
 
-When making changes to shell configuration, remember to source the changes with `source ~/.zshrc` or use the `s` alias.
+**System navigation**: `l` (ls -laG), `..`, `...`, `c` (pbcopy), `p` (pbpaste), `s` (source ~/.zshrc)
+**Docker workflow**: `d`, `di`, `dps`, `db`, `dr`  
+**Terraform**: `tf`, `tfi`, `tfp`, `tfa`, `tfd`
+**Notification**: `notify()` (terminal-notifier + ntfy integration)
+
+## Tmux Session Management
+
+**`.tmux.project` pattern**: Project-specific session configuration
+- Default: 2 windows with split panes
+- Custom colors from `/tmux/config/colours` based on session ID
+- Integration with `tnn()` function for intelligent session creation
+
+## Development Workflow Notes
+
+When modifying shell configuration:
+- Changes to `zshenv`: Available immediately in vim and new shells
+- Changes to `zshrc`: Requires `source ~/.zshrc` or `s` alias
+- Tmux changes: May require `tmux source-file ~/.tmux.conf`
+
+**Editor integration**: Homebrew vim (not system vim) ensures consistent plugin ecosystem and PATH access to all aliases.
