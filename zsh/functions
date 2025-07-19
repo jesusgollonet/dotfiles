@@ -53,7 +53,7 @@ resn_clone(){
 
 open_or_foreground_vim(){
     if jobs | grep -q "vim"; then 
-        fg %?vi
+        fg %?vi 2>/dev/null
     else 
         vi 
     fi
