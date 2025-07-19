@@ -27,8 +27,5 @@ bindkey -s '^[[20~' 'tmux attach\n'
 # F8 ⏯  lists current tmux sessions  
 bindkey -s '^[[19~' 'tmux ls\n'
 # F12 sends process to foreground (mostly for vim)
-open_or_foreground_vim_widget() {
-    open_or_foreground_vim
-}
-zle -N open_or_foreground_vim_widget
-bindkey '^[[24~' open_or_foreground_vim_widget
+bindkey -s '^[[24~' 'open_or_foreground_vim\n'
+#bindkey '^[[24~' open_or_foreground_vim
