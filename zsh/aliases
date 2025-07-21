@@ -60,8 +60,8 @@ alias npx="nocorrect npx"
 alias c="pbcopy"
 alias p="pbpaste"
 
-alias python="python3"
-alias pip="pip3"
+# alias python="python3"  # Commented out - conflicts with pyenv lazy-loading
+# alias pip="pip3"      # Commented out - conflicts with pyenv lazy-loading
 
 alias claude="~/.claude/local/claude"
 alias cl="claude"

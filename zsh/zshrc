@@ -1,4 +1,5 @@
 #!/bin/zsh
+# zmodload zsh/zprof
 
 fpath+=("$(brew --prefix)/share/zsh/site-functions")
 autoload -Uz promptinit
@@ -6,7 +7,11 @@ promptinit
 prompt pure
 
 autoload -Uz compinit
-compinit
+# Optimize compinit with caching - only rebuild if dump is older than 24h
+for dump in ~/.zcompdump(N.mh+24); do
+  compinit
+done
+compinit -C
 
 # history search with arrows 
 autoload -U up-line-or-beginning-search
@@ -65,17 +70,32 @@ export EDITOR=vim
 export GLAMOUR_STYLE=dracula
 
 export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+# Lazy-load NVM - only loads when nvm command is used
+nvm() {
+    unset -f nvm
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+    nvm "$@"
+}
 
-eval "$(atuin init zsh)"
+# Lazy-load atuin - only loads when atuin command is used
+atuin() {
+    unset -f atuin
+    eval "$(command atuin init zsh)"
+    atuin "$@"
+}
 
 [ -f "/Users/jgb/.ghcup/env" ] && . "/Users/jgb/.ghcup/env" # ghcup-env
 
 export DENO_INSTALL="/Users/jgb/.deno"
 export PATH="$DENO_INSTALL/bin:$PATH"
 
-eval "$(direnv hook zsh)"
+# Lazy-load direnv - only loads when direnv command is used or entering directories with .envrc
+direnv() {
+    unset -f direnv
+    eval "$(command direnv hook zsh)"
+    direnv "$@"
+}
 
 # pnpm
 export PNPM_HOME="/Users/jgb/Library/pnpm"
@@ -99,7 +119,23 @@ export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
 export PYENV_ROOT="$HOME/.pyenv"
 [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
-eval "$(pyenv init - zsh)"
+# Lazy-load pyenv - only loads when python/pyenv commands are used
+pyenv() {
+    unset -f pyenv python pip
+    eval "$(command pyenv init - zsh)"
+    pyenv "$@"
+}
+python() {
+    unset -f pyenv python pip
+    eval "$(command pyenv init - zsh)"
+    python "$@"
+}
+pip() {
+    unset -f pyenv python pip
+    eval "$(command pyenv init - zsh)" 
+    pip "$@"
+}
 
 # opencode
 export PATH=/Users/jgb/.opencode/bin:$PATH
+# zprof
