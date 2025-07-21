@@ -78,14 +78,24 @@ nvm() {
     nvm "$@"
 }
 
-eval "$(atuin init zsh)"
+# Lazy-load atuin - only loads when atuin command is used
+atuin() {
+    unset -f atuin
+    eval "$(command atuin init zsh)"
+    atuin "$@"
+}
 
 [ -f "/Users/jgb/.ghcup/env" ] && . "/Users/jgb/.ghcup/env" # ghcup-env
 
 export DENO_INSTALL="/Users/jgb/.deno"
 export PATH="$DENO_INSTALL/bin:$PATH"
 
-eval "$(direnv hook zsh)"
+# Lazy-load direnv - only loads when direnv command is used or entering directories with .envrc
+direnv() {
+    unset -f direnv
+    eval "$(command direnv hook zsh)"
+    direnv "$@"
+}
 
 # pnpm
 export PNPM_HOME="/Users/jgb/Library/pnpm"
@@ -109,7 +119,22 @@ export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
 export PYENV_ROOT="$HOME/.pyenv"
 [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
-eval "$(pyenv init - zsh)"
+# Lazy-load pyenv - only loads when python/pyenv commands are used
+pyenv() {
+    unset -f pyenv python pip
+    eval "$(command pyenv init - zsh)"
+    pyenv "$@"
+}
+python() {
+    unset -f pyenv python pip
+    eval "$(command pyenv init - zsh)"
+    python "$@"
+}
+pip() {
+    unset -f pyenv python pip
+    eval "$(command pyenv init - zsh)" 
+    pip "$@"
+}
 
 # opencode
 export PATH=/Users/jgb/.opencode/bin:$PATH
