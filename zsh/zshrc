@@ -1,4 +1,5 @@
 #!/bin/zsh
+# zmodload zsh/zprof
 
 fpath+=("$(brew --prefix)/share/zsh/site-functions")
 autoload -Uz promptinit
@@ -65,8 +66,13 @@ export EDITOR=vim
 export GLAMOUR_STYLE=dracula
 
 export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+# Lazy-load NVM - only loads when nvm command is used
+nvm() {
+    unset -f nvm
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+    nvm "$@"
+}
 
 eval "$(atuin init zsh)"
 
@@ -103,3 +109,4 @@ eval "$(pyenv init - zsh)"
 
 # opencode
 export PATH=/Users/jgb/.opencode/bin:$PATH
+# zprof
