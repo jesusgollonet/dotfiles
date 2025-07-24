@@ -78,12 +78,8 @@ nvm() {
     nvm "$@"
 }
 
-# Lazy-load atuin - only loads when atuin command is used
-atuin() {
-    unset -f atuin
-    eval "$(command atuin init zsh)"
-    atuin "$@"
-}
+# Initialize atuin history search immediately
+eval "$(atuin init zsh)"
 
 [ -f "/Users/jgb/.ghcup/env" ] && . "/Users/jgb/.ghcup/env" # ghcup-env
 
