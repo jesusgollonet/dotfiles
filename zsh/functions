@@ -62,3 +62,62 @@ open_or_foreground_vim(){
 function gi() { 
     curl -sLw "\n" https://www.gitignore.io/api/$@ ;
 }
+
+## adding key commands to some zsh functions
+function show_github_web(){
+    gh repo view --web 
+    zle reset-prompt
+}
+
+function list_github_issues(){
+    gh issue list 
+    echo # just adding a new line to prevent reset-prompt from eating output
+    zle reset-prompt
+}
+
+function enter_lazygit(){
+    lazygit
+}
+
+function notify(){
+    local message
+    message=$1
+    terminal-notifier -message "$message" -title "TBD"
+    curl -d "$message" ntfy.sh/rndjgbalert5
+}
+
+zle -N show_github_web
+zle -N list_github_issues
+zle -N enter_lazygit
+
+# Enhanced tmux project session with optional .tmux.project config
+tnn(){
+    local session_name
+    # Use provided name or fall back to directory name
+    if [ -n "$1" ]; then
+        session_name="$1"
+    else
+        session_name=$(basename "$PWD" | tr '[:upper:]' '[:lower:]')
+    fi
+    
+    # Create new session with first window
+    tmux new-session -d -s "$session_name" -c "$PWD"
+    
+    # Check for project-specific config
+    if [ -f ".tmux.project" ]; then
+        echo "Using custom .tmux.project config"
+        source .tmux.project
+    else
+        # Default layout: 2 windows, each with 2 panes
+        tmux split-window -h -c "$PWD"
+        tmux new-window -c "$PWD"
+        tmux select-window -t 1
+    fi
+    
+    # Attach to session
+    tmux attach-session -t "$session_name"
+}
+
+bindkey '^W' show_github_web
+bindkey '^L' list_github_issues
+bindkey '^G' enter_lazygit

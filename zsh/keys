@@ -1,5 +1,6 @@
 #!/bin/zsh
 
+bindkey '^R' history-incremental-search-backward
 #http://floatleft.com/notebook/mac-like-text-navigation-in-zsh
 # Skip forward/back a word with opt-arrow
 bindkey '[C' forward-word
@@ -19,13 +20,6 @@ bindkey '[I' kill-whole-line
 # search history with up & down
 bindkey "^[[A" up-line-or-beginning-search # Up
 bindkey "^[[B" down-line-or-beginning-search # Down
-
-# F1 to F5 go to tmux sessions 
-bindkey -s  '^[OP' 'tmux_go_to_session_num 1\n'
-bindkey -s  '^[OQ' 'tmux_go_to_session_num 2\n'
-bindkey -s  '^[OR' 'tmux_go_to_session_num 3\n'
-bindkey -s  '^[OS' 'tmux_go_to_session_num 4\n'
-bindkey -s  '^[[15~' 'tmux_go_to_session_num 5\n'
 
 # both ⏪ F7 and ⏩ F9 attach to tmux session (cycle through behaviour)
 bindkey -s '^[[18~' 'tmux attach\n'

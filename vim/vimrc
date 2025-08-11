@@ -1,4 +1,5 @@
 " This must be first, because it changes other options as side effect
+" Explain what each of these lines does, excluding comments
 set nocompatible
 
 call plug#begin('~/.vim/plugged')
@@ -11,19 +12,19 @@ Plug 'junegunn/seoul256.vim'
 "strings 
 Plug 'pangloss/vim-javascript'
 Plug 'posva/vim-vue'
+Plug 'evanleck/vim-svelte', {'branch': 'main'}
 "Plug 'Quramy/vim-js-pretty-template'
 Plug 'nathanaelkane/vim-indent-guides'
 Plug 'Raimondi/delimitMate'
-Plug 'scrooloose/syntastic'
+"Plug 'scrooloose/syntastic'
+"Plug 'dense-analysis/ale'
 " html/css
 Plug 'mattn/emmet-vim'
-Plug 'mustache/vim-mustache-handlebars'
-Plug 'groenewege/vim-less'
-Plug 'digitaltoad/vim-pug'
-" elm
-Plug 'elmcast/elm-vim'
-" elm
-Plug 'raichoo/purescript-vim'
+Plug 'sophacles/vim-processing'
+
+" markdown preview
+Plug 'iamcco/markdown-preview.nvim', { 'do': 'cd app && npx --yes yarn install' }
+Plug 'img-paste-devs/img-paste.vim'
 
 " rust
 Plug 'rust-lang/rust.vim'
@@ -33,24 +34,25 @@ Plug 'elzr/vim-json'
 Plug 'stephpy/vim-yaml'
 " jenkins
 Plug 'martinda/Jenkinsfile-vim-syntax'
-" general
 
+" general
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
 Plug 'airblade/vim-gitgutter'
 Plug 'scrooloose/nerdcommenter'
 Plug 'tpope/vim-surround'
+Plug 'tpope/vim-fugitive'
 Plug 'sbdchd/neoformat'
-Plug 'prettier/vim-prettier', { 'do': 'yarn install' }
+Plug 'prettier/vim-prettier',  { 'do': 'yarn install --frozen-lockfile --production' }
 
-"Plug 'suan/vim-instant-markdown'
+
 Plug 'reedes/vim-pencil'
 
 Plug 'junegunn/goyo.vim'
 Plug 'junegunn/vim-xmark', { 'do': 'make' }
 
 Plug 'hashivim/vim-terraform'
-Plug 'vim-scripts/indentpython.vim'
+Plug 'psf/black', { 'branch': 'stable' }
 
 Plug 'goodell/vim-mscgen'
 Plug 'supercollider/scvim'
@@ -58,10 +60,29 @@ Plug 'supercollider/scvim'
 Plug 'jparise/vim-graphql'
 Plug 'yuezk/vim-js'
 Plug 'maxmellon/vim-jsx-pretty'
+Plug 'leafgarland/typescript-vim'
+Plug 'neoclide/coc.nvim', {'branch': 'release'}
+" AI
+Plug 'github/copilot.vim'
+Plug 'pasky/claude.vim'
+Plug 'nekowasabi/aider.vim' 
+"Plug 'Exafunction/codeium.vim'
+" Using vim-plug
+"Plug 'sourcegraph/sg.nvim', { 'do': 'nvim -l build/init.lua' }
+
+" Required for various utilities
+Plug 'nvim-lua/plenary.nvim'
+
+" Required if you want to use some of the search functionality
+Plug 'nvim-telescope/telescope.nvim'
 
 Plug 'tpope/vim-liquid'
+Plug 'jvirtanen/vim-hcl'
+Plug 'hashivim/vim-packer'
+Plug 'isobit/vim-caddyfile'
 
 Plug 'z0mbix/vim-shfmt', { 'for': 'sh' }
+Plug 'tidalcycles/vim-tidal'
 " Add plugins to &runtimepath
 call plug#end()
 
@@ -80,6 +101,8 @@ colorscheme seoul256
 syntax on
 filetype on
 filetype plugin indent on
+runtime macros/matchit.vim " enable matching of brackets in html
+
 au BufNewFile,BufRead *.dust set filetype=html
 au BufNewFile,BufRead *.liquid set filetype=liquid
 "au FileType javascript JsPreTmpl html
@@ -141,6 +164,7 @@ nnoremap <silent> <C-b> :Buffers<CR>
 set splitbelow
 set splitright
 
+set updatetime=100
 " line numbers
 set number
 " allow unwritten buffers to be 'closed'
@@ -164,7 +188,9 @@ set noswapfile
 " dont wrap lines
 set nowrap
 " show newlines as $
-set list
+" removed for go as per
+" https://stackoverflow.com/questions/39091918/hiding-tab-characters-in-vim
+"set list
 " osx clipboard
 set clipboard=unnamed
 " 4 spaces by default
@@ -183,19 +209,48 @@ if filereadable(".vimrc.local")
 endif
 " config ----------
 " syntastic
-let g:syntastic_javascript_checkers = ['eslint']
-let g:syntastic_javascript_eslint_exec = 'eslint_d'
-"let g:syntastic_check_on_open=1
-let g:syntastic_always_populate_loc_list=1
+"let g:syntastic_javascript_checkers = ['eslint']
+"let g:syntastic_javascript_eslint_exec = 'eslint_d'
+""let g:syntastic_check_on_open=1
+"let g:syntastic_always_populate_loc_list=1
 "let g:syntastic_auto_loc_list=1
+"let g:ale_fixers = {
+    "\   'javascript': ['eslint'],
+    "\}
+"let g:ale_linters = {
+    "\   'javascript': ['eslint'],
+    "\}
+"let g:ale_fix_on_save = 1
+"let g:ale_sign_error = '>>'
+"let g:ale_sign_warning = '--'
+"let g:ale_echo_msg_error_str = 'E'
+"let g:ale_echo_msg_warning_str = 'W'
+"let g:ale_echo_msg_format = '[%linter%] %s [%severity%]'
+"let g:ale_python_flake8_options = '--max-line-length 88 --extend-ignore=E203'
 
 let g:omni_sql_no_default_maps = 1
 
 let g:elm_format_autosave = 1
 
-let g:prettier#config#parser = 'babylon'
+let g:prettier#config#parser = ''
 let g:prettier#autoformat = 0
-autocmd BufWritePre *.html,*.js,*.mjs,*.json,*.css,*.scss,*.less,*.vue,*.graphql Neoformat
+
+let g:ale_disable_lsp = 1
+"let g:syntastic_mode_map = { 'mode': 'passive' }
+let g:html_exclude_tags = ['a-scene', 'a-entity', 'a-camera', 'a-box', 'a-marker']
+autocmd BufWritePre *.html,*.js,*.mjs,*.json,*.css,*.scss,*.less,*.vue,*.graphql,*.ts,*.tsx,*.jsx,*.svelte Neoformat
+autocmd FileType markdown nmap <buffer><silent> <leader>p :call mdip#MarkdownClipboardImage()<CR>
+" there are some defaults for image directory and image name, you can change them
+" let g:mdip_imgdir = 'img'
+" let g:mdip_imgname = 'image'
+" python autoformatting
+augroup black_on_save
+  autocmd!
+  autocmd BufWritePre *.py Black
+augroup end
+
+let g:black_linelength = 88
+let g:black_virtualenv = ''  
 
 " vim-terraform
 let g:terraform_align=1
@@ -203,12 +258,103 @@ let g:terraform_fmt_on_save=1
 
 " rust
 let g:rustfmt_autosave = 1
-let g:syntastic_rust_checkers = ['rustc']
+"let g:syntastic_rust_checkers = ['rustc']
 let g:shfmt_fmt_on_save = 1
 let g:shfmt_extra_args = '-i 2'
 
 " scvim
+au BufEnter,BufWinEnter,BufNewFile,BufRead *.sc,*.scd set filetype=supercollider
+au Filetype supercollider packadd scvim
 "let g:scFlash = 1
 "let g:scTerminalBuffer = "on" 
 "let g:scSplitDirection = "h" 
 "let g:scSplitSize = 40 
+" CoC extensions
+let g:coc_global_extensions = ['coc-tsserver']
+inoremap <silent><expr> <TAB>
+      \ coc#pum#visible() ? coc#pum#next(1) :
+      \ CheckBackspace() ? "\<Tab>" :
+      \ coc#refresh()
+inoremap <expr><S-TAB> coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"
+
+" Make <CR> to accept selected completion item or notify coc.nvim to format
+" <C-g>u breaks current undo, please make your own choice
+inoremap <silent><expr> <CR> coc#pum#visible() ? coc#pum#confirm()
+                              \: "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
+
+
+" Use `[g` and `]g` to navigate diagnostics
+" Use `:CocDiagnostics` to get all diagnostics of current buffer in location list
+nmap <silent> [g <Plug>(coc-diagnostic-prev)
+nmap <silent> ]g <Plug>(coc-diagnostic-next)
+
+" GoTo code navigation
+nmap <silent> gd <Plug>(coc-definition)
+nmap <silent> gy <Plug>(coc-type-definition)
+nmap <silent> gi <Plug>(coc-implementation)
+nmap <silent> gr <Plug>(coc-references)
+
+" Use K to show documentation in preview window
+nnoremap <silent> K :call ShowDocumentation()<CR>
+
+function! ShowDocumentation()
+  if CocAction('hasProvider', 'hover')
+    call CocActionAsync('doHover')
+  else
+    call feedkeys('K', 'in')
+  endif
+endfunction
+
+function! CheckBackspace() abort
+  let col = col('.') - 1
+  return !col || getline('.')[col - 1]  =~# '\s'
+endfunction
+
+" Use <c-space> to trigger completion
+if has('nvim')
+  inoremap <silent><expr> <c-space> coc#refresh()
+else
+  inoremap <silent><expr> <c-@> coc#refresh()
+endif
+
+let g:ft = ''
+function! NERDCommenter_before()
+  if &ft == 'vue'
+    let g:ft = 'vue'
+    let stack = synstack(line('.'), col('.'))
+    if len(stack) > 0
+      let syn = synIDattr((stack)[0], 'name')
+      if len(syn) > 0
+        exe 'setf ' . substitute(tolower(syn), '^vue_', '', '')
+      endif
+    endif
+  endif
+endfunction
+
+function! NERDCommenter_after()
+  if g:ft == 'vue'
+    setf vue
+    let g:ft = ''
+  endif
+endfunction
+
+imap <silent><script><expr> <C-e> copilot#Accept('\<CR>')
+let g:copilot_no_tab_map = v:true
+
+if filereadable(expand("~/.vim/secrets.vim"))
+  source ~/.vim/secrets.vim
+endif
+
+let g:claude_map_implement = "<Leader>ci"
+let g:claude_map_open_chat = "<Leader>cl"
+let g:claude_map_send_chat_message = "<C-]>"
+let g:claude_map_cancel_response = "<Leader>cx"
+
+
+" Copy current file path to clipboard
+nnoremap <leader>cp :let @+ = expand('%:p')<CR>
+" Copy current file content to clipboard
+nnoremap <leader>cf :let @+ = join(getline(1, '$'), "\n")<CR>
+
+" Preview current markdown file in browser
+nnoremap <leader>mp :MarkdownPreviewToggle<CR>

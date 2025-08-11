@@ -1,0 +1,8 @@
+# moved aliases here since vim command mode doesn't load .zshrc as it's not an interactive tty
+# if I make my shell zsh, zshenv will be loaded and therefore available in vim  
+. ~/.dotfiles/zsh/aliases
+. ~/.dotfiles/tmux/aliases
+. "$HOME/.cargo/env"
+
+# uv
+export PATH="/Users/jgb/.local/bin:$PATH"

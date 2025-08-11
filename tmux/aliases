@@ -6,7 +6,7 @@ alias ts="tmux switch -t"
 alias td="tmux detach"
 alias tls="tmux list-sessions"
 alias tn="tmux new"
-alias tnn="tmux new -s"
+# alias tnn="tmux new -s" # replaced with enhanced function in zsh/functions
 alias tks="tmux kill-session -t"
 alias tkss="tmux kill-server"
 

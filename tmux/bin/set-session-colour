@@ -1,6 +1,6 @@
 #!/bin/bash
 
-COLOURS=/Users/jgb/.dotfiles/tmux/config/colours
+COLOURS="$HOME"/.dotfiles/tmux/config/colours
 
 get_tmux_session_id() {
   tmux display-message -p '#{session_id}' | cut -d '$' -f2
@@ -9,8 +9,8 @@ get_tmux_session_id() {
 set_background_colour() {
   local colour_number
   colour_number="$1"
-  tmux set -g status-bg colour"$colour_number"
-  tmux set -g status-fg colour0
+  tmux set status-bg colour"$colour_number"
+  tmux set status-fg colour0
 }
 
 get_colour_number() {

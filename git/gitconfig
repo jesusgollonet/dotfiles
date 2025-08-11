@@ -4,10 +4,12 @@
 [push]
   default = simple
 [core]
-  editor = /usr/bin/vim
+  editor = /opt/homebrew/bin/vim
+	autocrlf = false
 [alias]
   lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
   st = status
+  lsu = ls-files --others --exclude-standard
 [color]
   branch = auto
   diff = auto
@@ -32,5 +34,17 @@
 	required = true
 [http]
 	cookiefile = /Users/jgb/.gitcookies
-[url "git@github.com:"]
-	insteadOf = https://github.com/
+[diff "jupyternotebook"]
+	command = git-nbdiffdriver diff
+[merge "jupyternotebook"]
+	driver = git-nbmergedriver merge %O %A %B %L %P
+	name = jupyter notebook merge driver
+[difftool "nbdime"]
+	cmd = git-nbdifftool diff \"$LOCAL\" \"$REMOTE\" \"$BASE\"
+[difftool]
+	prompt = false
+[mergetool "nbdime"]
+	cmd = git-nbmergetool merge \"$BASE\" \"$LOCAL\" \"$REMOTE\" \"$MERGED\"
+[mergetool]
+	prompt = false
+

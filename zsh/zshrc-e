@@ -1,0 +1,70 @@
+#!/bin/zsh
+
+fpath+=("$(brew --prefix)/share/zsh/site-functions")
+autoload -Uz promptinit
+promptinit
+prompt pure
+
+autoload -Uz compinit
+compinit
+
+# history search with arrows 
+autoload -U up-line-or-beginning-search
+autoload -U down-line-or-beginning-search
+zle -N up-line-or-beginning-search
+zle -N down-line-or-beginning-search
+
+# Enable Ctrl-x-e to edit command line
+autoload -U edit-command-line
+# # Emacs style
+zle -N edit-command-line
+bindkey '^xe' edit-command-line
+bindkey '^x^e' edit-command-line
+
+# ignore case in completion
+zstyle ':completion:*' matcher-list '' 'm:{a-z}={A-Z}' '+m:{A-Z}={a-z}'
+
+. ~/.dotfiles/zsh/keys
+. ~/.dotfiles/zsh/functions
+. ~/.dotfiles/zsh/setopt
+
+HISTSIZE=10000
+SAVEHIST=10000
+HISTFILE=~/.history
+
+# add bin to path
+export PATH=~/.bin:$PATH
+export PATH=~/.dotfiles/bin:$PATH
+
+#source ~/.dotfiles/zsh/lib/zsh-git-prompt/zshrc.sh
+# an example prompt
+PROMPT='%B%#%b '
+# enable fzf
+# note in order for key commands to work on fzf we need to $(brew --prefix)/opt/fzf/install
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
+# Move next only if `homebrew` is installed
+if command -v brew >/dev/null 2>&1; then
+    # Load rupa's z if installed
+    [ -f $(brew --prefix)/etc/profile.d/z.sh ] && source $(brew --prefix)/etc/profile.d/z.sh
+fi
+
+# Setting ag as the default source for fzf
+export FZF_DEFAULT_COMMAND='ag --hidden --ignore .git -g ""'
+# To apply the command to CTRL-T as well
+export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+# Mosh needs locale 
+export LC_ALL=en_US.UTF-8
+export LANG=en_US.UTF-8
+export LANGUAGE=en_US.UTF-8
+#
+export EDITOR=vim 
+
+# gh cli needs needs a style to be visible in dark mode  (markdown renderer is glamour)
+export GLAMOUR_STYLE=dracula
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
+eval "$(atuin init zsh)"
