@@ -49,9 +49,6 @@ export PATH=~/.bin:$PATH
 export PATH=~/.dotfiles/bin:$PATH
 export PATH=~/.local/bin:$PATH
 
-#source ~/.dotfiles/zsh/lib/zsh-git-prompt/zshrc.sh
-# an example prompt
-PROMPT='%B%#%b '
 # enable fzf
 source <(fzf --zsh)
 # note in order for key commands to work on fzf we need to $(brew --prefix)/opt/fzf/install
