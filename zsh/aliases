@@ -3,7 +3,11 @@ alias s='source ~/.zshrc'
 
 # vim
 # use brew vim over system vim
-alias vim='/opt/homebrew/bin/vim'
+#
+case "$(uname -s)" in
+  Darwin)  alias vim='/opt/homebrew/bin/vim' ;;  # macOS
+  Linux)   alias vim='/usr/bin/vim' ;;           # Ubuntu/Debian
+esac
 alias vi='vim'
 alias v='vim'
 
