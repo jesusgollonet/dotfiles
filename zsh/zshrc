@@ -159,5 +159,7 @@ if [ -d "$FNM_PATH" ]; then
   eval "`fnm env`"
 fi
 
-. "$HOME/.atuin/bin/env"
+case "$(uname -s)" in
+  Linux) . "$HOME/.atuin/bin/env"
+esac
 eval "$(zoxide init zsh)"
