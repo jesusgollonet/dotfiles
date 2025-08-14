@@ -4,7 +4,10 @@
 # Only add brew fpath if brew is available
 if command -v brew >/dev/null 2>&1; then
     fpath+=("$(brew --prefix)/share/zsh/site-functions")
+else
+    fpath+=($HOME/.zsh/pure)
 fi
+
 
 autoload -Uz promptinit
 promptinit
