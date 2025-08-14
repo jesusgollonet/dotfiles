@@ -1,4 +1,9 @@
 #!/bin/zsh
+
+case "$(uname -s)" in
+  Linux) eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+esac
+
 # zmodload zsh/zprof
 
 # Only add brew fpath if brew is available
