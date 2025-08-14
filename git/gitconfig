@@ -4,8 +4,7 @@
 [push]
   default = simple
 [core]
-  editor = /opt/homebrew/bin/vim
-	autocrlf = false
+  autocrlf = false
 [alias]
   lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
   st = status
