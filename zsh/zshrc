@@ -1,10 +1,17 @@
 #!/bin/zsh
 # zmodload zsh/zprof
 
-fpath+=("$(brew --prefix)/share/zsh/site-functions")
+# Only add brew fpath if brew is available
+if command -v brew >/dev/null 2>&1; then
+    fpath+=("$(brew --prefix)/share/zsh/site-functions")
+fi
+
 autoload -Uz promptinit
 promptinit
-prompt pure
+# Only set prompt pure if available
+if (( ${+functions[prompt]} )); then
+    prompt pure 2>/dev/null || true
+fi
 
 autoload -Uz compinit
 # Optimize compinit with caching - only rebuild if dump is older than 24h
@@ -40,6 +47,7 @@ HISTFILE=~/.history
 # add bin to path
 export PATH=~/.bin:$PATH
 export PATH=~/.dotfiles/bin:$PATH
+export PATH=~/.local/bin:$PATH
 
 #source ~/.dotfiles/zsh/lib/zsh-git-prompt/zshrc.sh
 # an example prompt
@@ -78,12 +86,16 @@ nvm() {
     nvm "$@"
 }
 
-# Initialize atuin history search immediately
-eval "$(atuin init zsh)"
+# Initialize atuin history search immediately - only if atuin is available
+if command -v atuin >/dev/null 2>&1; then
+    eval "$(atuin init zsh)"
+fi
 
-[ -f "/Users/jgb/.ghcup/env" ] && . "/Users/jgb/.ghcup/env" # ghcup-env
+# ghcup-env - cross-platform paths
+[ -f "$HOME/.ghcup/env" ] && . "$HOME/.ghcup/env" # ghcup-env
 
-export DENO_INSTALL="/Users/jgb/.deno"
+# Deno - cross-platform paths
+export DENO_INSTALL="$HOME/.deno"
 export PATH="$DENO_INSTALL/bin:$PATH"
 
 # Lazy-load direnv - only loads when direnv command is used or entering directories with .envrc
@@ -94,21 +106,22 @@ direnv() {
 }
 
 # pnpm
-export PNPM_HOME="/Users/jgb/Library/pnpm"
+case "$(uname -s)" in
+  Darwin) export PNPM_HOME="$HOME/Library/pnpm" ;;
+  Linux)  export PNPM_HOME="$HOME/.local/share/pnpm" ;;
+esac
 case ":$PATH:" in
   *":$PNPM_HOME:"*) ;;
   *) export PATH="$PNPM_HOME:$PATH" ;;
 esac
 # pnpm end
 
-# The next line updates PATH for the Google Cloud SDK.
-if [ -f '/Users/jgb/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/jgb/google-cloud-sdk/path.zsh.inc'; fi
+# Google Cloud SDK - cross-platform paths
+if [ -f "$HOME/google-cloud-sdk/path.zsh.inc" ]; then . "$HOME/google-cloud-sdk/path.zsh.inc"; fi
+if [ -f "$HOME/google-cloud-sdk/completion.zsh.inc" ]; then . "$HOME/google-cloud-sdk/completion.zsh.inc"; fi
 
-# The next line enables shell command completion for gcloud.
-if [ -f '/Users/jgb/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/jgb/google-cloud-sdk/completion.zsh.inc'; fi
-
-# bun completions
-[ -s "/Users/jgb/.bun/_bun" ] && source "/Users/jgb/.bun/_bun"
+# bun completions - cross-platform paths  
+[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
 
 # bun
 export BUN_INSTALL="$HOME/.bun"
@@ -132,6 +145,19 @@ pip() {
     pip "$@"
 }
 
-# opencode
-export PATH=/Users/jgb/.opencode/bin:$PATH
+# opencode - cross-platform paths
+export PATH="$HOME/.opencode/bin:$PATH"
 # zprof
+
+# fnm - cross-platform paths
+case "$(uname -s)" in
+  Darwin) FNM_PATH="$HOME/Library/Application Support/fnm" ;;
+  Linux)  FNM_PATH="$HOME/.local/share/fnm" ;;
+esac
+if [ -d "$FNM_PATH" ]; then
+  export PATH="$FNM_PATH:$PATH"
+  eval "`fnm env`"
+fi
+
+. "$HOME/.atuin/bin/env"
+eval "$(zoxide init zsh)"

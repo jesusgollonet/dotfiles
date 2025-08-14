@@ -2,7 +2,11 @@
 # if I make my shell zsh, zshenv will be loaded and therefore available in vim  
 . ~/.dotfiles/zsh/aliases
 . ~/.dotfiles/tmux/aliases
-. "$HOME/.cargo/env"
 
-# uv
-export PATH="/Users/jgb/.local/bin:$PATH"
+case "$(uname -s)" in
+    Darwin)
+        # rust
+        . "$HOME/.cargo/env"
+        # uv
+        export PATH="/Users/jgb/.local/bin:$PATH"
+esac
