@@ -55,14 +55,6 @@ export PATH=~/.local/bin:$PATH
 
 # enable fzf
 source <(fzf --zsh)
-# note in order for key commands to work on fzf we need to $(brew --prefix)/opt/fzf/install
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-
-# Move next only if `homebrew` is installed
-if command -v brew >/dev/null 2>&1; then
-    # Load rupa's z if installed
-    [ -f $(brew --prefix)/etc/profile.d/z.sh ] && source $(brew --prefix)/etc/profile.d/z.sh
-fi
 
 # Setting ag as the default source for fzf
 export FZF_DEFAULT_COMMAND='ag --hidden --ignore .git -g ""'
