@@ -43,6 +43,7 @@ Plug 'tpope/vim-surround'
 Plug 'tpope/vim-fugitive'
 Plug 'sbdchd/neoformat'
 Plug 'prettier/vim-prettier',  { 'do': 'yarn install --frozen-lockfile --production' }
+Plug 'ojroques/vim-oscyank'
 
 
 Plug 'reedes/vim-pencil'
@@ -354,6 +355,9 @@ let g:claude_map_cancel_response = "<Leader>cx"
 nnoremap <leader>cp :let @+ = expand('%:p')<CR>
 " Copy current file content to clipboard
 nnoremap <leader>cf :let @+ = join(getline(1, '$'), "\n")<CR>
+
+" Copy in remote/ssh session
+vnoremap <leader>y :OSCYankVisual<CR>
 
 " Preview current markdown file in browser
 nnoremap <leader>mp :MarkdownPreviewToggle<CR>
