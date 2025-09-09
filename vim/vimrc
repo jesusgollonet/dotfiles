@@ -126,8 +126,8 @@ map <leader>mf :!mv <C-R>=expand("%")<CR> <C-R>=expand("%:h")<CR>/
 " new folder in current dir
 map <leader>nF :!mkdir <C-R>=expand("%:h")<CR>/
 " git
-" blame current file
-map <leader>gb :!git blame %<CR>
+" blame current file using fugitive
+map <leader>gb :Git blame<CR>
 " diff current file
 map <leader>gd :silent !git diff %<CR> :redraw!<Cr>
 map <leader>gD :silent !git diff<CR> :redraw!<Cr>
