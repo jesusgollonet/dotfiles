@@ -1,0 +1,56 @@
+#!/bin/bash
+set -euo pipefail
+
+PROFILE=$1
+DURATION=3600 # seconds (1 hour)
+CONFIG_FILE="${HOME}/.aws/config"
+
+# Extract role_arn and source_profile from ~/.aws/config
+ROLE_ARN=$(awk -v p="profile $PROFILE" '
+  $0 ~ "\\["p"\\]" {f=1; next}
+  /^\[/{f=0}
+  f && /^role_arn/ {print $3}
+' "$CONFIG_FILE")
+
+SOURCE_PROFILE=$(awk -v p="profile $PROFILE" '
+  $0 ~ "\\["p"\\]" {f=1; next}
+  /^\[/{f=0}
+  f && /^source_profile/ {print $3}
+' "$CONFIG_FILE")
+
+if [ -z "$ROLE_ARN" ]; then
+  echo "❌ Could not find role_arn for profile '$PROFILE' in $CONFIG_FILE"
+  exit 1
+fi
+
+SOURCE_PROFILE=${SOURCE_PROFILE:-default}
+
+# Assume role
+CREDS=$(aws sts assume-role \
+  --role-arn "$ROLE_ARN" \
+  --role-session-name "${PROFILE}-session" \
+  --profile "$SOURCE_PROFILE" \
+  --duration-seconds "$DURATION" \
+  --query 'Credentials' \
+  --output json)
+
+ACCESS_KEY=$(echo "$CREDS" | jq -r .AccessKeyId)
+SECRET_KEY=$(echo "$CREDS" | jq -r .SecretAccessKey)
+SESSION_TOKEN=$(echo "$CREDS" | jq -r .SessionToken)
+
+# Create federated login URL
+SESSION_JSON=$(jq -n \
+  --arg a "$ACCESS_KEY" \
+  --arg s "$SECRET_KEY" \
+  --arg t "$SESSION_TOKEN" \
+  '{"sessionId":$a,"sessionKey":$s,"sessionToken":$t}')
+
+SIGNIN_TOKEN=$(curl -s "https://signin.aws.amazon.com/federation" \
+  --data-urlencode "Action=getSigninToken" \
+  --data-urlencode "Session=$SESSION_JSON" | jq -r .SigninToken)
+
+DEST_URL="https://console.aws.amazon.com/"
+LOGIN_URL="https://signin.aws.amazon.com/federation?Action=login&Issuer=$PROFILE&Destination=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$DEST_URL'))")&SigninToken=$SIGNIN_TOKEN"
+
+echo "🔐 Opening AWS console for '$PROFILE'..."
+open "$LOGIN_URL" || xdg-open "$LOGIN_URL"
