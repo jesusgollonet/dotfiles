@@ -159,6 +159,10 @@ nnoremap <C-H> <C-W><C-H>
 " FZF config
 nnoremap <silent> <C-t> :Files<CR>
 nnoremap <silent> <C-b> :Buffers<CR>
+" FZF including gitignored files (for .env, node_modules, etc.)
+command! -bang -nargs=? -complete=dir FilesAll
+    \ call fzf#vim#files(<q-args>, {'source': 'ag --hidden --skip-vcs-ignores --ignore .git -g ""'}, <bang>0)
+nnoremap <silent> <C-p> :FilesAll<CR>
 
 " open splits where it makes sense
 set splitbelow
