@@ -67,7 +67,7 @@ alias p="pbpaste"
 # alias python="python3"  # Commented out - conflicts with pyenv lazy-loading
 # alias pip="pip3"      # Commented out - conflicts with pyenv lazy-loading
 
-case "$(uname -s)" in
-  Darwin)  alias claude="~/.claude/local/claude"
-esac
+#case "$(uname -s)" in
+  #Darwin)  alias claude="~/.claude/local/claude"
+#esac
 

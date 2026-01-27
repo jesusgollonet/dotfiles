@@ -156,3 +156,6 @@ case "$(uname -s)" in
   Linux) . "$HOME/.atuin/bin/env"
 esac
 eval "$(zoxide init zsh)"
+
+
+[ -s "$HOME/.config/jira/env" ] && source "$HOME/.config/jira/env"
