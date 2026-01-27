@@ -1,0 +1,50 @@
+#!/bin/bash
+
+set -euo pipefail
+
+usage() {
+  cat << 'USAGE'
+Usage: kill_port <port> [--force]
+
+Kills any process holding the given TCP port.
+
+Options:
+  --force    Send SIGKILL instead of SIGTERM
+  -h, --help Show this help
+USAGE
+}
+
+main() {
+  if [[ ${1:-} == "-h" || ${1:-} == "--help" || ${1:-} == "" ]]; then
+    usage
+    exit 1
+  fi
+
+  local port=$1
+  shift || true
+
+  local signal="-TERM"
+  if [[ ${1:-} == "--force" ]]; then
+    signal="-KILL"
+  fi
+
+  if ! [[ $port =~ ^[0-9]+$ ]]; then
+    echo "error: port must be a number" >&2
+    exit 2
+  fi
+
+  local pids
+  # List any process using the port (listening or connected)
+  pids=$(lsof -nP -iTCP:"$port" -t 2>/dev/null | sort -u || true)
+
+  if [[ -z $pids ]]; then
+    echo "No process found on port $port"
+    exit 0
+  fi
+
+  echo "Killing PID(s) on port $port: $pids"
+  # shellcheck disable=SC2086
+  kill "$signal" $pids
+}
+
+main "$@"
