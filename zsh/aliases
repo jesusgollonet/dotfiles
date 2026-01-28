@@ -25,6 +25,9 @@ alias gc='git commit'
 alias glog='git log'
 alias gb='git branch'
 
+# GitHub Actions
+alias ghwd='gh-watch-and-debug'
+
 # docker 
 alias d='docker'
 alias di='docker images'

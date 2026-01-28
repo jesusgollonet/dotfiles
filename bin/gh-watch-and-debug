@@ -1,0 +1,110 @@
+#!/bin/bash
+# gh-watch-and-debug - Watch GitHub Actions and auto-open failed job logs
+
+set -e
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+usage() {
+    echo "Usage: gh-watch-and-debug [run-id]"
+    echo "Watch a GitHub Actions run and automatically show failed job logs when it fails"
+    echo ""
+    echo "If no run-id is provided, will use the latest run"
+    exit 1
+}
+
+# Handle help flag
+if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+    usage
+fi
+
+# Get run ID - use provided arg or get latest run
+if [ $# -eq 0 ]; then
+    echo "Getting latest run..."
+    RUN_ID=$(gh run list --limit 1 --json databaseId --jq '.[0].databaseId')
+    if [ -z "$RUN_ID" ]; then
+        echo -e "${RED}Error: No runs found${NC}"
+        exit 1
+    fi
+    echo "Watching latest run: $RUN_ID"
+else
+    RUN_ID="$1"
+    echo "Watching run: $RUN_ID"
+fi
+
+# Function to show failed logs
+show_failed_logs() {
+    local run_id="$1"
+    echo -e "\n${RED}=== RUN FAILED - Showing failed job logs ===${NC}"
+    
+    # Get all jobs for this run and their status
+    jobs=$(gh api "repos/:owner/:repo/actions/runs/$run_id/jobs" --jq '.jobs[] | select(.conclusion == "failure") | {id: .id, name: .name}')
+    
+    if [ -z "$jobs" ]; then
+        echo -e "${YELLOW}No failed jobs found, showing all logs:${NC}"
+        gh run view "$run_id" --log
+        return
+    fi
+    
+    # Show logs for each failed job
+    echo "$jobs" | jq -r '.id' | while read -r job_id; do
+        job_name=$(echo "$jobs" | jq -r "select(.id == $job_id) | .name")
+        echo -e "\n${RED}Failed Job: $job_name (ID: $job_id)${NC}"
+        echo "----------------------------------------"
+        gh run view --log-failed --job "$job_id" || {
+            echo -e "${YELLOW}Fallback: showing full job log${NC}"
+            gh run view --log --job "$job_id"
+        }
+    done
+}
+
+# Watch the run
+echo "Watching run $RUN_ID..."
+echo "Press Ctrl+C to stop watching"
+
+# Use a simple polling approach since gh run watch may not exist everywhere
+while true; do
+    # Get current status
+    status=$(gh api "repos/:owner/:repo/actions/runs/$RUN_ID" --jq '.status')
+    conclusion=$(gh api "repos/:owner/:repo/actions/runs/$RUN_ID" --jq '.conclusion')
+    
+    case "$status" in
+        "queued")
+            echo -e "${YELLOW}⏳ Run is queued...${NC}"
+            ;;
+        "in_progress")
+            echo -e "${YELLOW}🔄 Run is in progress...${NC}"
+            ;;
+        "completed")
+            case "$conclusion" in
+                "success")
+                    echo -e "${GREEN}✅ Run completed successfully!${NC}"
+                    exit 0
+                    ;;
+                "failure")
+                    echo -e "${RED}❌ Run failed!${NC}"
+                    show_failed_logs "$RUN_ID"
+                    exit 1
+                    ;;
+                "cancelled")
+                    echo -e "${YELLOW}⏹️  Run was cancelled${NC}"
+                    exit 0
+                    ;;
+                *)
+                    echo -e "${YELLOW}🤷 Run completed with status: $conclusion${NC}"
+                    show_failed_logs "$RUN_ID"
+                    exit 1
+                    ;;
+            esac
+            ;;
+        *)
+            echo -e "${YELLOW}Unknown status: $status${NC}"
+            ;;
+    esac
+    
+    sleep 5
+done

@@ -159,3 +159,5 @@ eval "$(zoxide init zsh)"
 
 
 [ -s "$HOME/.config/jira/env" ] && source "$HOME/.config/jira/env"
+[ -s "$HOME/.config/op/env" ] && source "$HOME/.config/op/env"
+[ -s "$HOME/.claude/env" ] && source "$HOME/.claude/env"
