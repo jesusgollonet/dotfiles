@@ -1,5 +1,8 @@
 # Dotfiless
 
+## Docs
+- [Vim](vim.md) - plugins, keybindings, and shortcuts
+
 ## How to install
 - clone this repo
 - move to `~/.dotfiles` (paths are currently hardcoded)
