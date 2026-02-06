@@ -26,6 +26,8 @@ bindkey -s '^[[18~' 'tmux attach\n'
 bindkey -s '^[[20~' 'tmux attach\n'
 # F8 ⏯  lists current tmux sessions  
 bindkey -s '^[[19~' 'tmux ls\n'
+# F6 shows git diff (auto-zoom tmux if needed)
+bindkey -s '^[[17~' 'tmux_git_diff\n'
 # F12 sends process to foreground (mostly for vim)
 bindkey -s '^[[24~' 'open_or_foreground_vim\n'
 #bindkey '^[[24~' open_or_foreground_vim

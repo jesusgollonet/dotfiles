@@ -121,3 +121,30 @@ tnn(){
 bindkey '^W' show_github_web
 bindkey '^L' list_github_issues
 bindkey '^G' enter_lazygit
+
+# Git diff that auto-zooms tmux only when needed for wide output.
+tmux_git_diff() {
+    local tmp cols max_len zoomed pager
+    tmp="$(mktemp /tmp/git-diff.XXXXXX)" || return 1
+    cols="$(tput cols 2>/dev/null || echo 80)"
+
+    # Capture diff once to avoid running twice.
+    # Force color output (e.g. difftastic) even when redirected.
+    DFT_COLOR=always GIT_PAGER=cat git -c color.ui=always diff > "$tmp"
+    # Measure width without ANSI color codes.
+    max_len="$(perl -pe 's/\x1b\[[0-9;]*m//g' "$tmp" | awk 'length>m{m=length} END{print m+0}')"
+
+    if [ -n "$TMUX" ] && [ "$max_len" -gt "$cols" ]; then
+        tmux resize-pane -Z
+        zoomed=1
+    fi
+
+    pager="${PAGER:-less -R}"
+    eval "$pager" < "$tmp"
+
+    if [ -n "$zoomed" ]; then
+        tmux resize-pane -Z
+    fi
+
+    rm -f "$tmp"
+}
