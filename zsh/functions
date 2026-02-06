@@ -90,32 +90,82 @@ zle -N show_github_web
 zle -N list_github_issues
 zle -N enter_lazygit
 
-# Enhanced tmux project session with optional .tmux.project config
-tnn(){
+tmux_project_session_name() {
+    # Session naming: keep it stable and tmux-safe (alnum + underscores).
+    local dir base
+    dir="${1:-$PWD}"
+    base="$(basename "$dir" | tr '[:upper:]' '[:lower:]')"
+    echo "$base" | tr -cs '[:alnum:]' '_' | sed 's/^_//; s/_$//'
+}
+
+tmux_attach_or_switch() {
+    local session_name="$1"
+    if [ -n "$TMUX" ]; then
+        tmux switch-client -t "$session_name"
+    else
+        tmux attach-session -t "$session_name"
+    fi
+}
+
+# Enhanced tmux project session with optional .tmux.project config.
+# If the session already exists, we just attach/switch.
+tnn() {
     local session_name
+    if ! command -v tmux >/dev/null 2>&1; then
+        echo "tmux not found"
+        return 127
+    fi
+
     # Use provided name or fall back to directory name
     if [ -n "$1" ]; then
         session_name="$1"
     else
-        session_name=$(basename "$PWD" | tr '[:upper:]' '[:lower:]')
+        session_name="$(tmux_project_session_name "$PWD")"
     fi
-    
+
+    if tmux has-session -t "$session_name" 2>/dev/null; then
+        tmux_attach_or_switch "$session_name"
+        return $?
+    fi
+
     # Create new session with first window
-    tmux new-session -d -s "$session_name" -c "$PWD"
-    
+    tmux new-session -d -s "$session_name" -c "$PWD" || return $?
+
     # Check for project-specific config
     if [ -f ".tmux.project" ]; then
+        export TMUX_PROJECT_SESSION="$session_name"
+        export TMUX_PROJECT_DIR="$PWD"
         echo "Using custom .tmux.project config"
         source .tmux.project
     else
         # Default layout: 2 windows, each with 2 panes
-        tmux split-window -h -c "$PWD"
-        tmux new-window -c "$PWD"
-        tmux select-window -t 1
+        tmux split-window -h -t "$session_name" -c "$PWD"
+        tmux new-window -t "$session_name" -c "$PWD"
+        tmux select-window -t "$session_name:1"
     fi
-    
-    # Attach to session
-    tmux attach-session -t "$session_name"
+
+    tmux_attach_or_switch "$session_name"
+}
+
+# Jump to a project via zoxide, then attach/create its tmux session.
+# Usage:
+#   zt [query...]
+#   zt            # interactive picker
+zt() {
+    local dir
+    if ! command -v zoxide >/dev/null 2>&1; then
+        echo "zoxide not found"
+        return 127
+    fi
+
+    if [ "$#" -gt 0 ]; then
+        dir="$(zoxide query -- "$@")" || return $?
+    else
+        dir="$(zoxide query -i)" || return $?
+    fi
+
+    cd "$dir" || return $?
+    tnn
 }
 
 bindkey '^W' show_github_web
