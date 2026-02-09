@@ -95,7 +95,7 @@ tmux_project_session_name() {
     local dir base
     dir="${1:-$PWD}"
     base="$(basename "$dir" | tr '[:upper:]' '[:lower:]')"
-    echo "$base" | tr -cs '[:alnum:]' '_' | sed 's/^_//; s/_$//'
+    echo "$base" | tr -cs '[:alnum:]' '-' | sed 's/^_//; s/_$//'
 }
 
 tmux_attach_or_switch() {
