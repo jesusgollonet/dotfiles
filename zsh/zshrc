@@ -171,3 +171,4 @@ case "$(uname -s)" in
     source "/home/jgb/.openclaw/completions/openclaw.zsh"
     ;;
 esac
+bindkey '^T' fzf-smart-open

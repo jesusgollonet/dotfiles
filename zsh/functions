@@ -198,3 +198,67 @@ tmux_git_diff() {
 
     rm -f "$tmp"
 }
+
+# Smart file opener using fzf
+fzf-smart-open() {
+    local cmd="${FZF_CTRL_T_COMMAND:-find . -type f}"
+    local out key file
+    local editor="${EDITOR:-vim}"
+    local viewer="${PAGER:-less}"
+    
+    if command -v bat >/dev/null; then
+        viewer="bat"
+    fi
+    
+    # Run fzf using the command, expecting ctrl-e (edit) and ctrl-v (view)
+    out=$(eval "$cmd" | fzf --height 40% --reverse --expect=ctrl-e,ctrl-v --header=$'\e[1;36mEnter\e[0m: \e[2mSmart\e[0m | \e[1;36mCtrl-E\e[0m: \e[2mEdit\e[0m | \e[1;36mCtrl-V\e[0m: \e[2mView\e[0m')
+    
+    # Split output into lines array
+    local lines=("${(@f)out}")
+    key="${lines[1]}"
+    file="${lines[2]}"
+    
+    if [[ -n "$file" ]]; then
+        case "$key" in
+            ctrl-e)
+                # Force Edit
+                "$editor" "$file" < /dev/tty
+                ;;
+            ctrl-v)
+                # Force View
+                case "${file:e:l}" in
+                    csv)
+                        if command -v xan >/dev/null; then
+                            xan view "$file" < /dev/tty
+                        else
+                            "$viewer" "$file" < /dev/tty
+                        fi
+                        ;;
+                    *)
+                        "$viewer" "$file" < /dev/tty
+                        ;;
+                esac
+                ;;
+            *)
+                # Smart Default (Enter)
+                case "${file:e:l}" in
+                    json)
+                        "$editor" "$file" < /dev/tty
+                        ;;
+                    csv)
+                        if command -v xan >/dev/null; then
+                            xan view "$file" < /dev/tty
+                        else
+                            "$editor" "$file" < /dev/tty
+                        fi
+                        ;;
+                    *)
+                        "$editor" "$file" < /dev/tty
+                        ;;
+                esac
+                ;;
+        esac
+        zle reset-prompt
+    fi
+}
+zle -N fzf-smart-open
