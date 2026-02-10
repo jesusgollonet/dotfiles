@@ -163,4 +163,11 @@ eval "$(zoxide init zsh)"
 [ -s "$HOME/.claude/env" ] && source "$HOME/.claude/env"
 
 # OpenClaw Completion
-source "/Users/jgb/.openclaw/completions/openclaw.zsh"
+case "$(uname -s)" in
+  Darwin)
+    [ -f "$HOME/.openclaw/completions/openclaw.zsh" ] && source "$HOME/.openclaw/completions/openclaw.zsh"
+    ;;
+  Linux)
+    source "/home/jgb/.openclaw/completions/openclaw.zsh"
+    ;;
+esac
