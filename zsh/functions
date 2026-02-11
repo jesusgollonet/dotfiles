@@ -91,11 +91,11 @@ zle -N list_github_issues
 zle -N enter_lazygit
 
 tmux_project_session_name() {
-    # Session naming: keep it stable and tmux-safe (alnum + underscores).
+    # Session naming: keep it stable and tmux-safe (alnum + hyphens).
     local dir base
     dir="${1:-$PWD}"
     base="$(basename "$dir" | tr '[:upper:]' '[:lower:]')"
-    echo "$base" | tr -cs '[:alnum:]' '-' | sed 's/^_//; s/_$//'
+    echo "$base" | tr -cs '[:alnum:]' '-' | sed 's/^-//; s/-$//'
 }
 
 tmux_attach_or_switch() {
