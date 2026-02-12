@@ -1,0 +1,48 @@
+#!/bin/bash
+# Set a value in 1Password
+# Usage: op-set <item-name> <value> [field] [vault]
+# Example: op-set OPENCLAW_REMOTE_TOKEN "new-token-123"
+# Example: op-set JIRA_API_TOKEN "token123" username
+# Example: op-set MY_SECRET "secret" credential Personal
+
+set -e
+
+# Load config
+CONFIG_FILE="$HOME/.dotfiles/config/op.conf"
+if [ -f "$CONFIG_FILE" ]; then
+    source "$CONFIG_FILE"
+fi
+
+ITEM="${1}"
+VALUE="${2}"
+FIELD="${3:-${OP_DEFAULT_FIELD:-credential}}"
+VAULT="${4:-${OP_DEFAULT_VAULT:-mendivil}}"
+
+if [ -z "$ITEM" ] || [ -z "$VALUE" ]; then
+    echo "Usage: op-set <item-name> <value> [field] [vault]"
+    echo ""
+    echo "Examples:"
+    echo "  op-set OPENCLAW_REMOTE_TOKEN \"new-token-123\""
+    echo "  op-set JIRA_API_TOKEN \"token123\" username"
+    echo "  op-set MY_SECRET \"secret\" credential Personal"
+    echo ""
+    echo "Current defaults:"
+    echo "  Field: $FIELD"
+    echo "  Vault: $VAULT"
+    exit 1
+fi
+
+# Check if item exists, create if it doesn't
+if ! op item get "$ITEM" --vault "$VAULT" &>/dev/null; then
+    echo "Item '$ITEM' does not exist in vault '$VAULT'. Creating it..."
+    op item create \
+        --category "API Credential" \
+        --title "$ITEM" \
+        --vault "$VAULT" \
+        "$FIELD=$VALUE"
+    echo "✓ Created item '$ITEM' with field '$FIELD'"
+else
+    # Item exists, update or add the field
+    op item edit "$ITEM" --vault "$VAULT" "$FIELD=$VALUE"
+    echo "✓ Updated field '$FIELD' in item '$ITEM'"
+fi

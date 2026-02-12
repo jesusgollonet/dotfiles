@@ -1,0 +1,41 @@
+#!/bin/bash
+# Get a value from 1Password
+# Usage: op-get <item-name> [field] [vault]
+# Example: op-get OPENCLAW_REMOTE_TOKEN
+# Example: op-get OPENCLAW_REMOTE_TOKEN username
+# Example: op-get MY_SECRET credential Personal
+
+set -e
+
+# Load config
+CONFIG_FILE="$HOME/.dotfiles/config/op.conf"
+if [ -f "$CONFIG_FILE" ]; then
+    source "$CONFIG_FILE"
+fi
+
+ITEM="${1}"
+FIELD="${2:-${OP_DEFAULT_FIELD:-credential}}"
+VAULT="${3:-${OP_DEFAULT_VAULT:-mendivil}}"
+
+if [ -z "$ITEM" ]; then
+    echo "Usage: op-get <item-name> [field] [vault]"
+    echo ""
+    echo "Examples:"
+    echo "  op-get OPENCLAW_REMOTE_TOKEN"
+    echo "  op-get JIRA_API_TOKEN username"
+    echo "  op-get MY_SECRET credential Personal"
+    echo ""
+    echo "Current defaults:"
+    echo "  Field: $FIELD"
+    echo "  Vault: $VAULT"
+    exit 1
+fi
+
+# Try to get the field value
+op item get "$ITEM" --vault "$VAULT" --fields "$FIELD" 2>/dev/null || {
+    echo "Error: Could not retrieve field '$FIELD' from item '$ITEM' in vault '$VAULT'" >&2
+    echo "" >&2
+    echo "Tip: List available fields with:" >&2
+    echo "  op item get \"$ITEM\" --vault \"$VAULT\" --format json | jq -r '.fields[] | .label'" >&2
+    exit 1
+}
