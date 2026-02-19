@@ -1,0 +1,97 @@
+#!/bin/bash
+
+set -euo pipefail
+
+PIDFILE="${TMPDIR:-/tmp}/caffeinate-toggle.pid"
+
+usage() {
+  cat << 'USAGE'
+Usage: toggle_sleep [status]
+
+Toggles macOS sleep prevention using caffeinate.
+
+Commands:
+  status   Show current sleep prevention status
+
+Options:
+  -h, --help  Show this help
+USAGE
+}
+
+ensure_darwin() {
+  if [[ $(uname -s) != "Darwin" ]]; then
+    echo "error: toggle_sleep only supports macOS" >&2
+    exit 2
+  fi
+}
+
+is_running() {
+  local pid=$1
+  ps -p "$pid" >/dev/null 2>&1
+}
+
+show_status() {
+  if [[ -f "$PIDFILE" ]]; then
+    local pid
+    pid=$(cat "$PIDFILE")
+    if is_running "$pid"; then
+      echo "Sleep disabled (caffeinate running, PID $pid)"
+      return 0
+    fi
+    rm -f "$PIDFILE"
+  fi
+  echo "Sleep enabled"
+}
+
+start_caffeinate() {
+  if ! command -v caffeinate >/dev/null 2>&1; then
+    echo "error: caffeinate not found" >&2
+    exit 3
+  fi
+
+  caffeinate -dimsu >/dev/null 2>&1 &
+  local pid=$!
+  echo "$pid" > "$PIDFILE"
+  echo "Sleep disabled (started caffeinate PID $pid)"
+}
+
+stop_caffeinate() {
+  local pid=$1
+  if is_running "$pid"; then
+    kill "$pid"
+    echo "Sleep enabled (stopped caffeinate PID $pid)"
+  else
+    echo "Sleep enabled (stale PID $pid cleared)"
+  fi
+  rm -f "$PIDFILE"
+}
+
+main() {
+  if [[ ${1:-} == "-h" || ${1:-} == "--help" ]]; then
+    usage
+    exit 0
+  fi
+
+  ensure_darwin
+
+  if [[ ${1:-} == "status" ]]; then
+    show_status
+    exit 0
+  fi
+
+  if [[ -n ${1:-} ]]; then
+    usage
+    exit 1
+  fi
+
+  if [[ -f "$PIDFILE" ]]; then
+    local pid
+    pid=$(cat "$PIDFILE")
+    stop_caffeinate "$pid"
+    exit 0
+  fi
+
+  start_caffeinate
+}
+
+main "$@"
