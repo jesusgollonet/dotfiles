@@ -79,6 +79,12 @@ function enter_lazygit(){
     lazygit
 }
 
+function open_aws_console_contextual(){
+    open-aws-console-contextual
+    echo # prevent reset-prompt from eating output
+    zle reset-prompt
+}
+
 function notify(){
     local message
     message=$1
@@ -89,6 +95,7 @@ function notify(){
 zle -N show_github_web
 zle -N list_github_issues
 zle -N enter_lazygit
+zle -N open_aws_console_contextual
 
 tmux_project_session_name() {
     # Session naming: keep it stable and tmux-safe (alnum + hyphens).
@@ -171,6 +178,7 @@ zt() {
 bindkey '^W' show_github_web
 bindkey '^L' list_github_issues
 bindkey '^G' enter_lazygit
+bindkey '^xa' open_aws_console_contextual
 
 tmux_git_diff() {
     local tmp pager

@@ -1,0 +1,108 @@
+#!/bin/bash
+set -euo pipefail
+
+PROFILE_VARS=(AWS_CONSOLE_PROFILE AWS_PROFILE AWS_DEFAULT_PROFILE)
+CONFIG_FILES=(.envrc .mrc .dramrc .env)
+
+extract_var_from_file() {
+  local file="$1"
+  local var="$2"
+  sed -nE "s/^[[:space:]]*(export[[:space:]]+)?${var}[[:space:]]*=[[:space:]]*['\"]?([^'\"#[:space:]]+)['\"]?.*$/\\2/p" "$file" | tail -n 1
+}
+
+resolve_profile_from_env() {
+  local var value
+  for var in "${PROFILE_VARS[@]}"; do
+    value="${!var:-}"
+    if [ -n "$value" ]; then
+      printf '%s\n' "$value"
+      return 0
+    fi
+  done
+  return 1
+}
+
+resolve_profile_from_direnv() {
+  if ! command -v direnv >/dev/null 2>&1 || ! command -v jq >/dev/null 2>&1; then
+    return 1
+  fi
+
+  if [ ! -f ".envrc" ]; then
+    return 1
+  fi
+
+  direnv export json 2>/dev/null | jq -r '.AWS_CONSOLE_PROFILE // .AWS_PROFILE // .AWS_DEFAULT_PROFILE // empty'
+}
+
+resolve_profile_from_files() {
+  local root="$1"
+  local search_paths=("$PWD")
+  local file var value path
+
+  if [ "$root" != "$PWD" ]; then
+    search_paths+=("$root")
+  fi
+
+  for path in "${search_paths[@]}"; do
+    for file in "${CONFIG_FILES[@]}"; do
+      if [ -f "$path/$file" ]; then
+        for var in "${PROFILE_VARS[@]}"; do
+          value="$(extract_var_from_file "$path/$file" "$var")"
+          if [ -n "$value" ]; then
+            printf '%s\n' "$value"
+            return 0
+          fi
+        done
+      fi
+    done
+  done
+
+  return 1
+}
+
+main() {
+  local profile="${1:-}"
+  local project_root
+
+  if [ -n "$profile" ]; then
+    open-aws-console "$profile"
+    return 0
+  fi
+
+  if profile="$(resolve_profile_from_env)"; then
+    open-aws-console "$profile"
+    return 0
+  fi
+
+  if profile="$(resolve_profile_from_direnv)"; then
+    if [ -n "$profile" ]; then
+      open-aws-console "$profile"
+      return 0
+    fi
+  fi
+
+  project_root="$PWD"
+  if command -v git >/dev/null 2>&1; then
+    project_root="$(git rev-parse --show-toplevel 2>/dev/null || printf '%s' "$PWD")"
+  fi
+
+  if profile="$(resolve_profile_from_files "$project_root")"; then
+    open-aws-console "$profile"
+    return 0
+  fi
+
+  cat <<EOF
+Could not determine an AWS profile for this directory.
+Checked, in order:
+1) Shell env: AWS_CONSOLE_PROFILE, AWS_PROFILE, AWS_DEFAULT_PROFILE
+2) direnv export from .envrc
+3) Project files in $PWD and ${project_root}: .envrc, .mrc, .dramrc, .env
+
+Use:
+  open-aws-console-contextual <profile>
+or set AWS_CONSOLE_PROFILE in your project config.
+EOF
+  return 1
+}
+
+main "$@"

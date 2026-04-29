@@ -63,6 +63,7 @@ The configuration creates a **seamless workflow** through integrated tools:
 - `Ctrl+G` → lazygit (visual git interface)
 - `Ctrl+W` → GitHub web view via `gh` CLI  
 - `Ctrl+L` → GitHub issues list
+- `Ctrl+X` then `A` → open contextual AWS console profile
 - Comprehensive git aliases: `g`, `gs`, `ga`, `gp`, `gl`, `gd`, `gco`, `gc`
 
 **Session Management:**
