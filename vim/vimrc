@@ -107,6 +107,7 @@ au BufNewFile,BufRead *.dust set filetype=html
 au BufNewFile,BufRead *.liquid set filetype=liquid
 "au FileType javascript JsPreTmpl html
 au BufRead,BufNewFile *.md setlocal textwidth=80
+au FileType markdown let b:copilot_enabled = 0
 
 
 " key mappings ---------------------------
