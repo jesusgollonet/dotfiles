@@ -3,7 +3,7 @@
 COLOURS="$HOME"/.dotfiles/tmux/config/colours
 
 get_tmux_session_id() {
-  tmux display-message -p '#{session_id}' | cut -d '$' -f2
+  tmux display-message -p '#{session_id}'
 }
 
 set_background_colour() {
@@ -32,7 +32,7 @@ set_remote_indicator() {
 main() {
   local tmux_session_id colour_number
   tmux_session_id=$(get_tmux_session_id)
-  colour_number=$(get_colour_number "$tmux_session_id")
+  colour_number=$(get_colour_number "${tmux_session_id#\$}")
   set_background_colour "$colour_number"
   set_remote_indicator "$tmux_session_id"
 }
