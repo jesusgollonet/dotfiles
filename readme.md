@@ -1,4 +1,4 @@
-# Dotfiless
+# Dotfiles
 
 ## Docs
 - [Vim](vim.md) - plugins, keybindings, and shortcuts
