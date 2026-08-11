@@ -196,8 +196,36 @@ set nowrap
 " removed for go as per
 " https://stackoverflow.com/questions/39091918/hiding-tab-characters-in-vim
 "set list
-" osx clipboard
-set clipboard=unnamed
+" Clipboard
+"
+" On macOS the helper delegates to /usr/bin/pbcopy. On a remote Linux host it
+" emits OSC 52 to the terminal, which lets the local terminal emulator update
+" its clipboard even through mosh and tmux. This Vim is built without
+" +clipboard, so do not use the unavailable * register as the default.
+let s:clipboard_helper = expand('~/.dotfiles/bin/pbcopy')
+
+function! s:CopyToSystemClipboard(contents) abort
+    if executable(s:clipboard_helper)
+        call system(shellescape(s:clipboard_helper), a:contents)
+    endif
+    if exists('$TMUX') && executable('tmux')
+        call system('tmux load-buffer -', a:contents)
+    endif
+endfunction
+
+function! s:CopyYankToSystemClipboard() abort
+    if get(v:event, 'operator', '') ==# 'y' && get(v:event, 'regname', '') !=# '_'
+        call s:CopyToSystemClipboard(@")
+    endif
+endfunction
+
+if executable(s:clipboard_helper)
+    set clipboard=
+    augroup dotfiles_system_clipboard
+        autocmd!
+        autocmd TextYankPost * call <SID>CopyYankToSystemClipboard()
+    augroup END
+endif
 " 4 spaces by default
 set smartindent
 set tabstop=4
@@ -357,12 +385,12 @@ let g:claude_map_cancel_response = "<Leader>cx"
 
 
 " Copy current file path to clipboard
-nnoremap <leader>cp :let @+ = expand('%:p')<CR>
+nnoremap <silent> <leader>cp :call <SID>CopyToSystemClipboard(expand('%:p'))<CR>
 " Copy current file content to clipboard
-nnoremap <leader>cf :let @+ = join(getline(1, '$'), "\n")<CR>
+nnoremap <silent> <leader>cf :call <SID>CopyToSystemClipboard(join(getline(1, '$'), "\n"))<CR>
 
 " Copy in remote/ssh session
-vnoremap <leader>y :OSCYankVisual<CR>
+vnoremap <silent> <leader>y y
 
 " Preview current markdown file in browser
 nnoremap <leader>mp :MarkdownPreviewToggle<CR>

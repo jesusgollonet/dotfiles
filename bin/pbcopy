@@ -1,0 +1,37 @@
+#!/bin/sh
+
+set -eu
+
+case "$(uname -s)" in
+  Darwin)
+    exec /usr/bin/pbcopy "$@"
+    ;;
+  Linux)
+    ;;
+  *)
+    echo "pbcopy: unsupported platform" >&2
+    exit 1
+    ;;
+esac
+
+payload="$(base64 | tr -d '\r\n')"
+target_tty="${OSC52_TTY:-}"
+
+if [ -z "$target_tty" ] && [ -n "${TMUX_PANE:-}" ] && command -v tmux >/dev/null 2>&1; then
+  target_tty="$(tmux display-message -p -t "$TMUX_PANE" '#{pane_tty}' 2>/dev/null || true)"
+fi
+
+if [ -z "$target_tty" ] && [ -e /dev/tty ]; then
+  target_tty=/dev/tty
+fi
+
+if [ -z "$target_tty" ]; then
+  echo "pbcopy: no tty available for OSC 52 clipboard copy" >&2
+  exit 1
+fi
+
+if [ -n "${TMUX:-}${TMUX_PANE:-}" ] || printf '%s' "${TERM:-}" | grep -Eq '^(screen|tmux)'; then
+  printf '\033Ptmux;\033\033]52;c;%s\a\033\\' "$payload" > "$target_tty"
+else
+  printf '\033]52;c;%s\a' "$payload" > "$target_tty"
+fi
