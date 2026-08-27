@@ -23,7 +23,7 @@ get_colour_number() {
 
 set_remote_indicator() {
   local session_id="$1"
-  if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ] || [ -n "$MOSH_CONNECTION" ] || tmux show-environment -t "$session_id" 2>/dev/null | grep -qE "^(SSH_(CLIENT|TTY)|MOSH_CONNECTION)="; then
+  if [ -n "$SSH_CONNECTION" ] || [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ] || [ -n "$MOSH_CONNECTION" ] || tmux show-environment -t "$session_id" 2>/dev/null | grep -qE "^(SSH_(CONNECTION|CLIENT|TTY)|MOSH_CONNECTION)="; then
     tmux set -t "$session_id" status-left-length 50
     tmux set -t "$session_id" status-left "#[bg=colour196,fg=colour255,bold] REMOTE #[default] [#S] "
   fi

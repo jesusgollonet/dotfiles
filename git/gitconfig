@@ -32,7 +32,7 @@
 	process = git-lfs filter-process
 	required = true
 [http]
-	cookiefile = /Users/jgb/.gitcookies
+	cookiefile = ~/.gitcookies
 [diff "jupyternotebook"]
 	command = git-nbdiffdriver diff
 [merge "jupyternotebook"]
@@ -48,3 +48,9 @@
 	prompt = false
 [diff]
     external = difft
+[credential "https://github.com"]
+	helper =
+	helper = !gh auth git-credential
+[credential "https://gist.github.com"]
+	helper =
+	helper = !gh auth git-credential

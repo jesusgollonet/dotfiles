@@ -163,12 +163,13 @@ eval "$(zoxide init zsh)"
 [ -s "$HOME/.claude/env" ] && source "$HOME/.claude/env"
 
 # OpenClaw Completion
-case "$(uname -s)" in
-  Darwin)
-    [ -f "$HOME/.openclaw/completions/openclaw.zsh" ] && source "$HOME/.openclaw/completions/openclaw.zsh"
-    ;;
-  Linux)
-    source "/home/jgb/.openclaw/completions/openclaw.zsh"
-    ;;
-esac
+[ -r "$HOME/.openclaw/completions/openclaw.zsh" ] && source "$HOME/.openclaw/completions/openclaw.zsh"
 bindkey '^T' fzf-smart-open
+
+# >>> grok installer >>>
+[ -d "$HOME/.grok/bin" ] && export PATH="$HOME/.grok/bin:$PATH"
+if [ -d "$HOME/.grok/completions/zsh" ]; then
+  fpath=("$HOME/.grok/completions/zsh" $fpath)
+  autoload -Uz compinit && compinit -C
+fi
+# <<< grok installer <<<
