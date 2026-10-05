@@ -5,7 +5,7 @@ set -e
 echo "install-npm-global-packages"
 
 main(){
-    npm i -g eslint purge
+    npm i -g eslint firebase-tools prettier purge
 }
 
 main
