@@ -6,7 +6,7 @@
 case "$(uname -s)" in
     Darwin)
         # rust
-        . "$HOME/.cargo/env"
+        [ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
         # uv
         export PATH="/Users/jgb/.local/bin:$PATH"
 esac
