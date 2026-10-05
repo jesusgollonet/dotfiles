@@ -1,0 +1,15 @@
+#!/bin/sh
+# macOS preferences set via `defaults`. Safe to run repeatedly.
+# Some only take effect after logging out and back in.
+
+set -eu
+
+if [ "$(uname -s)" != "Darwin" ]; then
+    echo "macos-defaults: not macOS, skipping"
+    exit 0
+fi
+
+# F1, F2, etc. behave as standard function keys (hold fn for media keys)
+defaults write -g com.apple.keyboard.fnState -bool true
+
+echo "macos-defaults: done (log out and back in for all changes to apply)"

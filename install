@@ -10,6 +10,7 @@ main(){
             xcode-select --install || true # errors if already installed
             brew bundle
             bash install-npm-global-packages
+            ./bin/macos-defaults
             ;;
     esac
     ./bin/caps-to-control
