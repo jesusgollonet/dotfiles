@@ -5,9 +5,14 @@ set -e
 echo "install"
 
 main(){
-    xcode-select --install
-    brew bundle
-    bash install-npm-global-packages
+    case "$(uname -s)" in
+        Darwin)
+            xcode-select --install || true # errors if already installed
+            brew bundle
+            bash install-npm-global-packages
+            ;;
+    esac
+    ./bin/caps-to-control
 }
 
 main

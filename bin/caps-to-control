@@ -1,0 +1,82 @@
+#!/bin/sh
+# Map Caps Lock to Control, persistently. Safe to run repeatedly.
+
+set -eu
+
+label="local.capslock-to-control"
+xkb_option="ctrl:nocaps"
+
+macos(){
+    # hidutil applies immediately; the LaunchAgent re-applies it at every login
+    mapping='{"UserKeyMapping":[{"HIDKeyboardModifierMappingSrc":0x700000039,"HIDKeyboardModifierMappingDst":0x7000000E0}]}'
+    plist="$HOME/Library/LaunchAgents/$label.plist"
+    mkdir -p "$(dirname "$plist")"
+    cat > "$plist" <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>$label</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/hidutil</string>
+        <string>property</string>
+        <string>--set</string>
+        <string>$mapping</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+</dict>
+</plist>
+EOF
+    launchctl bootout "gui/$(id -u)/$label" 2>/dev/null || true
+    launchctl bootstrap "gui/$(id -u)" "$plist"
+    echo "caps-to-control: Caps Lock -> Control (LaunchAgent $label)"
+}
+
+linux(){
+    # Desktop session (GNOME and friends)
+    if command -v gsettings >/dev/null 2>&1 && [ -n "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]; then
+        current="$(gsettings get org.gnome.desktop.input-sources xkb-options)"
+        case "$current" in
+            *"$xkb_option"*) ;;
+            "@as []"|"[]") gsettings set org.gnome.desktop.input-sources xkb-options "['$xkb_option']" ;;
+            *) gsettings set org.gnome.desktop.input-sources xkb-options "${current%]}, '$xkb_option']" ;;
+        esac
+        echo "caps-to-control: Caps Lock -> Control (gsettings)"
+        return
+    fi
+
+    # Over SSH the remapping that matters is the one on the client machine
+    if [ -n "${SSH_CONNECTION:-}" ]; then
+        echo "caps-to-control: skipped, SSH session (map Caps Lock on the machine you type on)"
+        return
+    fi
+
+    # Text console on a server with a keyboard attached
+    if [ -f /etc/default/keyboard ]; then
+        if grep -q "^XKBOPTIONS=.*$xkb_option" /etc/default/keyboard; then
+            echo "caps-to-control: already set in /etc/default/keyboard"
+            return
+        fi
+        sudo sed -i "s/^XKBOPTIONS=.*/XKBOPTIONS=\"$xkb_option\"/" /etc/default/keyboard
+        grep -q '^XKBOPTIONS=' /etc/default/keyboard || echo "XKBOPTIONS=\"$xkb_option\"" | sudo tee -a /etc/default/keyboard >/dev/null
+        if command -v setupcon >/dev/null 2>&1; then
+            sudo setupcon
+        fi
+        echo "caps-to-control: Caps Lock -> Control (console, /etc/default/keyboard)"
+        return
+    fi
+
+    echo "caps-to-control: skipped, no desktop session or console keyboard config found"
+}
+
+case "$(uname -s)" in
+    Darwin) macos ;;
+    Linux) linux ;;
+    *)
+        echo "caps-to-control: unsupported platform" >&2
+        exit 1
+        ;;
+esac
