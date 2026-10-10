@@ -1,3 +1,4 @@
 .DS_Store
 bin/ngrok
-config/op.conf
+config/*.conf
+bin/**/*.conf

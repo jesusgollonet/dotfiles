@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  launchd agent blueprint. launchd doesn't expand ~ or $HOME, so paths go through bash -c.
+  Install:   cp archive-agent-activity.plist ~/Library/LaunchAgents/local.archive-agent-activity.plist
+             launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/local.archive-agent-activity.plist
+  Run now:   launchctl kickstart gui/$(id -u)/local.archive-agent-activity
+  Uninstall: launchctl bootout gui/$(id -u)/local.archive-agent-activity
+  Log:       ~/Library/Logs/archive-agent-activity.log
+  launchd rather than cron: a sleeping laptop silently skips cron firings; StartInterval + RunAtLoad catch up after wake/login.
+-->
+<plist version="1.0">
+  <dict>
+    <key>Label</key>
+    <string>local.archive-agent-activity</string>
+    <key>ProgramArguments</key>
+    <array>
+      <string>/bin/bash</string>
+      <string>-c</string>
+      <string>exec "$HOME/.dotfiles/bin/archive-agent-activity/archive-agent-activity.sh" &gt;&gt; "$HOME/Library/Logs/archive-agent-activity.log" 2&gt;&amp;1</string>
+    </array>
+    <key>StartInterval</key>
+    <integer>1800</integer>
+    <key>RunAtLoad</key>
+    <true/>
+  </dict>
+</plist>

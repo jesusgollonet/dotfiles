@@ -1,0 +1,7 @@
+# Copy to archive-agent-activity.conf (gitignored) and fill in.
+
+# rsync destination; a <machine>/ subdirectory is created under it. It must already exist on the remote.
+PUSH_ACTIVITY_DEST=user@host:/path/to/remote-activity
+
+# Label for this machine on the remote. Optional; defaults to the short hostname.
+# PUSH_ACTIVITY_MACHINE=my-laptop
