@@ -182,3 +182,6 @@ if [ -d "$HOME/.grok/completions/zsh" ]; then
   autoload -Uz compinit && compinit -C
 fi
 # <<< grok installer <<<
+
+# Machine-local and identifying config (not tracked); keep this last so it can override.
+[ -r "$HOME/.zshrc.local" ] && source "$HOME/.zshrc.local"

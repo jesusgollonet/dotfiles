@@ -30,3 +30,10 @@ curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.c
 ln -s ~/.dotfiles/vim/vimrc .vimrc
 
 vim -c PlugInstall
+```
+
+## Local config
+Identity, work paths and secrets stay out of the repo, in untracked files that are loaded if present:
+- `~/.gitconfig.local` — `[user]` name/email, `includeIf` for work dirs
+- `~/.zshrc.local` — env vars (e.g. `NTFY_TOPIC`) and machine-specific functions
+- `~/.vim/secrets.vim` — vim-only secrets
