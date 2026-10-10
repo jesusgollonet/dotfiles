@@ -417,12 +417,6 @@ vnoremap <silent> <leader>y y
 " Preview current markdown file in browser
 nnoremap <leader>mp :MarkdownPreviewToggle<CR>
 
-" Shared personal Hydra settings (kept outside project repositories).
-if filereadable(expand("~/ActiveTheory/.vimrc.local"))
-    execute "source " . fnameescape(expand("~/ActiveTheory/.vimrc.local"))
-endif
-
-
 " Minimal, keyboard-focused file tree (F3).
 let g:fern#drawer_width = 30
 let g:fern#disable_drawer_hover_popup = 1
@@ -436,10 +430,19 @@ function! DotfilesToggleTree() abort
     endif
     let l:file = expand('%:p')
     let l:base = empty(l:file) ? getcwd() : fnamemodify(l:file, ':h')
-    let l:config = findfile('hydra.config.js', l:base . ';')
-    let l:git = finddir('.git', l:base . ';')
-    let l:root = !empty(l:config) ? fnamemodify(l:config, ':p:h')
-                \ : !empty(l:git) ? fnamemodify(l:git, ':p:h') : getcwd()
+    " Root at the nearest extra marker (set in ~/.vimrc.local), else the git root.
+    let l:root = getcwd()
+    for l:marker in get(g:, 'dotfiles_tree_root_markers', []) + ['.git']
+        let l:found = findfile(l:marker, l:base . ';')
+        if empty(l:found)
+            let l:found = finddir(l:marker, l:base . ';')
+        endif
+        if !empty(l:found)
+            " Strip the trailing slash :p adds to directories, then take the parent.
+            let l:root = fnamemodify(substitute(fnamemodify(l:found, ':p'), '/$', '', ''), ':h')
+            break
+        endif
+    endfor
     let t:dotfiles_tree_root = l:root
     let l:reveal = filereadable(l:file) ? ' -reveal=' . fnameescape(l:file) : ''
     execute 'Fern ' . fnameescape(l:root) . ' -drawer -toggle' . l:reveal
@@ -461,3 +464,8 @@ augroup dotfiles_fern
 augroup END
 nnoremap <silent> <F3> :call DotfilesToggleTree()<CR>
 inoremap <silent> <F3> <Esc>:call DotfilesToggleTree()<CR>
+
+" Machine-local and identifying config (not tracked); keep this last so it can override.
+if filereadable(expand("~/.vimrc.local"))
+    source ~/.vimrc.local
+endif

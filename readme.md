@@ -36,4 +36,5 @@ vim -c PlugInstall
 Identity, work paths and secrets stay out of the repo, in untracked files that are loaded if present:
 - `~/.gitconfig.local` — `[user]` name/email, `includeIf` for work dirs
 - `~/.zshrc.local` — env vars (e.g. `NTFY_TOPIC`) and machine-specific functions
+- `~/.vimrc.local` — vim settings, e.g. `g:dotfiles_tree_root_markers` for the F3 tree
 - `~/.vim/secrets.vim` — vim-only secrets
