@@ -37,6 +37,7 @@ Plug 'martinda/Jenkinsfile-vim-syntax'
 " general
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
+Plug 'lambdalisue/vim-fern'
 Plug 'airblade/vim-gitgutter'
 Plug 'scrooloose/nerdcommenter'
 Plug 'tpope/vim-surround'
@@ -158,6 +159,8 @@ nnoremap <C-H> <C-W><C-H>
 
 
 " FZF config
+" Search the word under the cursor across the project.
+nnoremap <silent> <leader>a :Ag <C-R><C-W><CR>
 nnoremap <silent> <C-t> :Files<CR>
 nnoremap <silent> <C-b> :Buffers<CR>
 " FZF including gitignored files (for .env, node_modules, etc.)
@@ -198,14 +201,18 @@ set nowrap
 "set list
 " Clipboard
 "
-" On macOS the helper delegates to /usr/bin/pbcopy. On a remote Linux host it
+" When Vim has +clipboard on macOS, the * register is the system pasteboard,
+" so yank and paste go through it directly. Otherwise fall back to the helper:
+" on macOS it delegates to /usr/bin/pbcopy, and on a remote Linux host it
 " emits OSC 52 to the terminal, which lets the local terminal emulator update
-" its clipboard even through mosh and tmux. This Vim is built without
-" +clipboard, so do not use the unavailable * register as the default.
+" its clipboard even through mosh and tmux (copy only; paste with Cmd+V).
+let s:native_clipboard = has('clipboard') && has('mac')
 let s:clipboard_helper = expand('~/.dotfiles/bin/pbcopy')
 
 function! s:CopyToSystemClipboard(contents) abort
-    if executable(s:clipboard_helper)
+    if s:native_clipboard
+        let @* = a:contents
+    elseif executable(s:clipboard_helper)
         call system(shellescape(s:clipboard_helper), a:contents)
     endif
     if exists('$TMUX') && executable('tmux')
@@ -219,7 +226,17 @@ function! s:CopyYankToSystemClipboard() abort
     endif
 endfunction
 
-if executable(s:clipboard_helper)
+if s:native_clipboard
+    set clipboard=unnamed
+    " Keep the tmux paste buffer in sync with yanks
+    if exists('$TMUX') && executable('tmux')
+        augroup dotfiles_system_clipboard
+            autocmd!
+            autocmd TextYankPost * if get(v:event, 'operator', '') ==# 'y'
+                        \ | call system('tmux load-buffer -', @") | endif
+        augroup END
+    endif
+elseif executable(s:clipboard_helper)
     set clipboard=
     augroup dotfiles_system_clipboard
         autocmd!
@@ -271,7 +288,12 @@ let g:prettier#autoformat = 0
 let g:ale_disable_lsp = 1
 "let g:syntastic_mode_map = { 'mode': 'passive' }
 let g:html_exclude_tags = ['a-scene', 'a-entity', 'a-camera', 'a-box', 'a-marker']
-autocmd BufWritePre *.html,*.js,*.mjs,*.json,*.css,*.scss,*.less,*.vue,*.graphql,*.ts,*.tsx,*.jsx,*.svelte Neoformat
+let g:neoformat_only_msg_on_error = 1
+
+augroup format_on_save
+  autocmd!
+  autocmd BufWritePre *.html,*.js,*.mjs,*.json,*.css,*.scss,*.less,*.vue,*.graphql,*.ts,*.tsx,*.jsx,*.svelte Neoformat
+augroup END
 autocmd FileType markdown nmap <buffer><silent> <leader>p :call mdip#MarkdownClipboardImage()<CR>
 " there are some defaults for image directory and image name, you can change them
 " let g:mdip_imgdir = 'img'
@@ -394,3 +416,48 @@ vnoremap <silent> <leader>y y
 
 " Preview current markdown file in browser
 nnoremap <leader>mp :MarkdownPreviewToggle<CR>
+
+" Shared personal Hydra settings (kept outside project repositories).
+if filereadable(expand("~/ActiveTheory/.vimrc.local"))
+    execute "source " . fnameescape(expand("~/ActiveTheory/.vimrc.local"))
+endif
+
+
+" Minimal, keyboard-focused file tree (F3).
+let g:fern#drawer_width = 30
+let g:fern#disable_drawer_hover_popup = 1
+let g:fern#default_hidden = 1
+let g:fern#default_exclude = '\(^\|/\)\%(\.git\|node_modules\|build\|generated\|runtime\)\($\|/\)'
+
+function! DotfilesToggleTree() abort
+    if &filetype ==# 'fern'
+        execute 'Fern ' . fnameescape(get(t:, 'dotfiles_tree_root', getcwd())) . ' -drawer -toggle'
+        return
+    endif
+    let l:file = expand('%:p')
+    let l:base = empty(l:file) ? getcwd() : fnamemodify(l:file, ':h')
+    let l:config = findfile('hydra.config.js', l:base . ';')
+    let l:git = finddir('.git', l:base . ';')
+    let l:root = !empty(l:config) ? fnamemodify(l:config, ':p:h')
+                \ : !empty(l:git) ? fnamemodify(l:git, ':p:h') : getcwd()
+    let t:dotfiles_tree_root = l:root
+    let l:reveal = filereadable(l:file) ? ' -reveal=' . fnameescape(l:file) : ''
+    execute 'Fern ' . fnameescape(l:root) . ' -drawer -toggle' . l:reveal
+endfunction
+
+function! DotfilesFernMaps() abort
+    setlocal nonumber norelativenumber signcolumn=no
+    nmap <silent><buffer> h <Plug>(fern-action-collapse)
+    nmap <silent><buffer> l <Plug>(fern-action-expand)
+    nmap <silent><buffer><expr> <CR> fern#smart#leaf(
+                \ "\<Plug>(fern-action-open)",
+                \ "\<Plug>(fern-action-expand)")
+    nnoremap <silent><buffer> q :close<CR>
+endfunction
+
+augroup dotfiles_fern
+    autocmd!
+    autocmd FileType fern call DotfilesFernMaps()
+augroup END
+nnoremap <silent> <F3> :call DotfilesToggleTree()<CR>
+inoremap <silent> <F3> <Esc>:call DotfilesToggleTree()<CR>
