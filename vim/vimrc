@@ -408,6 +408,42 @@ let g:claude_map_cancel_response = "<Leader>cx"
 
 " Copy current file path to clipboard
 nnoremap <silent> <leader>cp :call <SID>CopyToSystemClipboard(expand('%:p'))<CR>
+" Copy current file's GitHub URL (on the default branch) to clipboard
+function! s:CopyGitHubUrl() abort
+    let l:file = expand('%:p')
+    if empty(l:file)
+        echoerr 'No current file'
+        return
+    endif
+
+    let l:dir = fnamemodify(l:file, ':h')
+    let l:root = trim(system('git -C ' . shellescape(l:dir) . ' rev-parse --show-toplevel'))
+    if v:shell_error
+        echoerr 'Current file is not in a Git repository'
+        return
+    endif
+
+    let l:remote = trim(system('git -C ' . shellescape(l:root) . ' remote get-url origin'))
+    if v:shell_error || l:remote !~# '^\%(git@github\.com:\|https://github\.com/\)'
+        echoerr 'Origin is not a GitHub remote'
+        return
+    endif
+    let l:repo = substitute(l:remote, '^git@github\.com:', '', '')
+    let l:repo = substitute(l:repo, '^https://github\.com/', '', '')
+    let l:repo = substitute(l:repo, '\.git$', '', '')
+
+    let l:branch = trim(system('git -C ' . shellescape(l:root) . ' symbolic-ref --quiet --short refs/remotes/origin/HEAD'))
+    let l:branch = empty(l:branch) ? 'main' : substitute(l:branch, '^origin/', '', '')
+    let l:relative = l:file[strlen(l:root) + 1:]
+    let l:relative = substitute(l:relative, '%', '%25', 'g')
+    let l:relative = substitute(l:relative, ' ', '%20', 'g')
+    let l:relative = substitute(l:relative, '#', '%23', 'g')
+    let l:relative = substitute(l:relative, '?', '%3F', 'g')
+
+    call s:CopyToSystemClipboard('https://github.com/' . l:repo . '/blob/' . l:branch . '/' . l:relative)
+    echo 'Copied GitHub URL'
+endfunction
+nnoremap <silent> <leader>cg :call <SID>CopyGitHubUrl()<CR>
 " Copy current file content to clipboard
 nnoremap <silent> <leader>cf :call <SID>CopyToSystemClipboard(join(getline(1, '$'), "\n"))<CR>
 
