@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Sync agent conversations (Claude Code transcripts, Codex session index) to a remote machine.
+# Sync agent conversations (Claude Code transcripts, Codex transcripts and session index) to a remote machine.
 # Reads settings from $PUSH_ACTIVITY_CONFIG, or archive-agent-activity.conf next to this script
 # (gitignored; copy archive-agent-activity.conf.example to start).
 
@@ -20,3 +20,10 @@ DEST="${PUSH_ACTIVITY_DEST%/}/${PUSH_ACTIVITY_MACHINE}/"
 if [ -f "$HOME/.codex/session_index.jsonl" ]; then
     /usr/bin/rsync -az "$HOME/.codex/session_index.jsonl" "$DEST"
 fi
+# Full Codex transcripts; archiving moves a session out of sessions/, so push both.
+for dir in sessions archived_sessions; do
+    if [ -d "$HOME/.codex/$dir" ]; then
+        /usr/bin/rsync -az --delete "$HOME/.codex/$dir/" "${DEST}codex-${dir//_/-}/"
+    fi
+done
+echo "$(date '+%Y-%m-%d %H:%M:%S') done"
