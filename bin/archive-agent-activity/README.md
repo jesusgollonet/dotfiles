@@ -3,6 +3,7 @@
 Pushes this machine's agent session data to a remote host on a schedule, so that host can report coding activity across machines:
 
 - `~/.claude/projects/` → `<dest>/<machine>/projects/` (mirrored with `--delete`)
+- `~/.codex/sessions/` → `<dest>/<machine>/codex-sessions/` and `~/.codex/archived_sessions/` → `<dest>/<machine>/codex-archived-sessions/` (mirrored, if present)
 - `~/.codex/session_index.jsonl` → `<dest>/<machine>/` (if present)
 - `~/.codex/sessions/` and `~/.codex/archived_sessions/` → `<dest>/<machine>/codex-sessions/` and `codex-archived-sessions/` (mirrored with `--delete`, if present)
 

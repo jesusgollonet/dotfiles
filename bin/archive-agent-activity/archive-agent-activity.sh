@@ -17,6 +17,12 @@ CONFIG="${PUSH_ACTIVITY_CONFIG:-$SCRIPT_DIR/archive-agent-activity.conf}"
 echo "$(date '+%Y-%m-%d %H:%M:%S') pushing to ${PUSH_ACTIVITY_MACHINE}"
 DEST="${PUSH_ACTIVITY_DEST%/}/${PUSH_ACTIVITY_MACHINE}/"
 /usr/bin/rsync -az --delete "$HOME/.claude/projects/" "${DEST}projects/"
+if [ -d "$HOME/.codex/sessions" ]; then
+    /usr/bin/rsync -az --delete "$HOME/.codex/sessions/" "${DEST}codex-sessions/"
+fi
+if [ -d "$HOME/.codex/archived_sessions" ]; then
+    /usr/bin/rsync -az --delete "$HOME/.codex/archived_sessions/" "${DEST}codex-archived-sessions/"
+fi
 if [ -f "$HOME/.codex/session_index.jsonl" ]; then
     /usr/bin/rsync -az "$HOME/.codex/session_index.jsonl" "$DEST"
 fi
