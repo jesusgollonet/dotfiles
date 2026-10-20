@@ -305,7 +305,6 @@ augroup black_on_save
 augroup end
 
 let g:black_linelength = 88
-let g:black_virtualenv = ''  
 
 " vim-terraform
 let g:terraform_align=1
@@ -325,7 +324,7 @@ au Filetype supercollider packadd scvim
 "let g:scSplitDirection = "h" 
 "let g:scSplitSize = 40 
 " CoC extensions
-let g:coc_global_extensions = ['coc-tsserver']
+let g:coc_global_extensions = ['coc-tsserver', 'coc-pyright']
 inoremap <silent><expr> <TAB>
       \ coc#pum#visible() ? coc#pum#next(1) :
       \ CheckBackspace() ? "\<Tab>" :
@@ -348,6 +347,8 @@ nmap <silent> gd <Plug>(coc-definition)
 nmap <silent> gy <Plug>(coc-type-definition)
 nmap <silent> gi <Plug>(coc-implementation)
 nmap <silent> gr <Plug>(coc-references)
+nmap <silent> <leader>rn <Plug>(coc-rename)
+nmap <silent> <leader>ca <Plug>(coc-codeaction-cursor)
 
 " Use K to show documentation in preview window
 nnoremap <silent> K :call ShowDocumentation()<CR>
