@@ -46,6 +46,12 @@
 - **nerdcommenter** (`scrooloose`) - Toggle comments
 - **emmet-vim** (`mattn`) - Emmet abbreviations for HTML/CSS
 
+### Project files
+- `F3` - toggle Fern at the project root and reveal the current file; `h` collapses, `l` expands, `Enter` opens, and `q` closes the tree
+- `F4` - toggle the project-root `TODO` file in a bottom split
+- In `TODO`: `<leader>n` adds a task, `<leader>x` toggles `- ` / `x `, and `<leader>j` / `<leader>k` move a task down / up
+- The root is the nearest `hydra.config.js` directory when present, otherwise the Git root; without either it uses Vim's working directory
+
 ### Formatting & Linting
 - **neoformat** (`sbdchd`) - Multi-language formatting (runs on save for web files)
 - **vim-prettier** (`prettier`) - Prettier integration

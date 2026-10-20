@@ -453,6 +453,23 @@ vnoremap <silent> <leader>y y
 " Preview current markdown file in browser
 nnoremap <leader>mp :MarkdownPreviewToggle<CR>
 
+" Prefer a project marker within a larger repo; fall back to the nearest Git root.
+" The marker list can still be overridden in ~/.vimrc.local.
+let g:dotfiles_tree_root_markers = get(g:, 'dotfiles_tree_root_markers', ['hydra.config.js'])
+
+function! DotfilesProjectRoot(base) abort
+    for l:marker in g:dotfiles_tree_root_markers + ['.git']
+        let l:found = findfile(l:marker, a:base . ';')
+        if empty(l:found)
+            let l:found = finddir(l:marker, a:base . ';')
+        endif
+        if !empty(l:found)
+            return fnamemodify(substitute(fnamemodify(l:found, ':p'), '/$', '', ''), ':h')
+        endif
+    endfor
+    return getcwd()
+endfunction
+
 " Minimal, keyboard-focused file tree (F3).
 let g:fern#drawer_width = 30
 let g:fern#disable_drawer_hover_popup = 1
@@ -466,19 +483,7 @@ function! DotfilesToggleTree() abort
     endif
     let l:file = expand('%:p')
     let l:base = empty(l:file) ? getcwd() : fnamemodify(l:file, ':h')
-    " Root at the nearest extra marker (set in ~/.vimrc.local), else the git root.
-    let l:root = getcwd()
-    for l:marker in get(g:, 'dotfiles_tree_root_markers', []) + ['.git']
-        let l:found = findfile(l:marker, l:base . ';')
-        if empty(l:found)
-            let l:found = finddir(l:marker, l:base . ';')
-        endif
-        if !empty(l:found)
-            " Strip the trailing slash :p adds to directories, then take the parent.
-            let l:root = fnamemodify(substitute(fnamemodify(l:found, ':p'), '/$', '', ''), ':h')
-            break
-        endif
-    endfor
+    let l:root = DotfilesProjectRoot(l:base)
     let t:dotfiles_tree_root = l:root
     let l:reveal = filereadable(l:file) ? ' -reveal=' . fnameescape(l:file) : ''
     execute 'Fern ' . fnameescape(l:root) . ' -drawer -toggle' . l:reveal
@@ -500,6 +505,81 @@ augroup dotfiles_fern
 augroup END
 nnoremap <silent> <F3> :call DotfilesToggleTree()<CR>
 inoremap <silent> <F3> <Esc>:call DotfilesToggleTree()<CR>
+
+" F4 toggles the current project's TODO without discarding unsaved edits.
+function! DotfilesToggleTodo() abort
+    let l:file = expand('%:p')
+    let l:base = empty(l:file) ? getcwd() : fnamemodify(l:file, ':h')
+    let l:root = DotfilesProjectRoot(l:base)
+    let l:path = l:root . '/TODO'
+    let l:window = bufwinid(bufnr(l:path))
+    if l:window != -1
+        if winnr('$') == 1
+            echom 'TODO is the only window; keeping it open.'
+            return
+        endif
+        let l:return = win_getid()
+        call win_gotoid(l:window)
+        if l:return == l:window
+            let l:return = get(w:, 'dotfiles_todo_origin', 0)
+        endif
+        hide
+        call win_gotoid(l:return)
+        return
+    endif
+    if !filereadable(l:path)
+        echom 'No TODO file in ' . l:root
+        return
+    endif
+    let l:origin = win_getid()
+    execute 'botright 10split ' . fnameescape(l:path)
+    let w:dotfiles_todo_origin = l:origin
+    setlocal bufhidden=hide
+endfunction
+
+nnoremap <silent> <F4> :call DotfilesToggleTodo()<CR>
+inoremap <silent> <F4> <Esc>:call DotfilesToggleTodo()<CR>
+
+" Task keys apply only to a TODO file at the detected project root.
+function! DotfilesTodoNew() abort
+    call append(line('$'), '- ')
+    call cursor(line('$'), 1)
+    startinsert!
+endfunction
+
+function! DotfilesTodoToggle() abort
+    let l:text = getline('.')
+    if l:text =~# '^x '
+        call setline('.', '- ' . strpart(l:text, 2))
+    elseif l:text =~# '^- '
+        call setline('.', 'x ' . strpart(l:text, 2))
+    endif
+endfunction
+
+function! DotfilesTodoMove(direction) abort
+    let l:destination = line('.') + a:direction
+    if l:destination < 1 || l:destination > line('$')
+        return
+    endif
+    execute a:direction > 0 ? 'move .+1' : 'move .-2'
+endfunction
+
+function! DotfilesTodoMaps() abort
+    let l:file = expand('%:p')
+    if empty(l:file) || l:file !=# DotfilesProjectRoot(fnamemodify(l:file, ':h')) . '/TODO'
+        return
+    endif
+    nnoremap <silent><buffer> <leader>n :call DotfilesTodoNew()<CR>
+    nnoremap <silent><buffer> <leader>x :call DotfilesTodoToggle()<CR>
+    nnoremap <silent><buffer> <leader>j :call DotfilesTodoMove(1)<CR>
+    nnoremap <silent><buffer> <leader>k :call DotfilesTodoMove(-1)<CR>
+endfunction
+
+augroup dotfiles_todo_maps
+    autocmd!
+    autocmd BufEnter * call DotfilesTodoMaps()
+augroup END
+call DotfilesTodoMaps()
 
 " Machine-local and identifying config (not tracked); keep this last so it can override.
 if filereadable(expand("~/.vimrc.local"))
