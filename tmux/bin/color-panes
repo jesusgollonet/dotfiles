@@ -10,11 +10,18 @@ detect_app() {
     vim|nvim) echo vim; return ;;
     claude) echo claude; return ;;
     codex) echo codex; return ;;
+    agent|cursor-agent) echo agent; return ;;
   esac
 
   # Claude Code: symlink target basename is the version (pane_title often has "Claude")
   if [[ "$title" == *[Cc]laude* ]] || [[ -e "${HOME}/.local/share/claude/versions/${cmd}" ]]; then
     echo claude
+    return
+  fi
+
+  # Cursor Agent lives under ~/.local/share/cursor-agent/versions/<ver>/cursor-agent
+  if [[ "$title" == *[Cc]ursor*[Aa]gent* ]] || [[ -d "${HOME}/.local/share/cursor-agent/versions/${cmd}" ]]; then
+    echo agent
     return
   fi
 
@@ -38,6 +45,10 @@ color_pane() {
       ;;
     codex)
       inactive='fg=colour252,bg=#353024'
+      active='fg=default,bg=#1c1c1c'
+      ;;
+    agent)
+      inactive='fg=colour252,bg=#243035'
       active='fg=default,bg=#1c1c1c'
       ;;
     *)
