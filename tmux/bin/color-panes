@@ -1,0 +1,62 @@
+#!/bin/bash
+# Tint each pane by its running app so inactive panes stay distinguishable.
+# Claude installs as a versioned binary (e.g. 2.1.306), so detect via path/title.
+
+detect_app() {
+  local cmd="$1"
+  local title="$2"
+
+  case "$cmd" in
+    vim|nvim) echo vim; return ;;
+    claude) echo claude; return ;;
+    codex) echo codex; return ;;
+  esac
+
+  # Claude Code: symlink target basename is the version (pane_title often has "Claude")
+  if [[ "$title" == *[Cc]laude* ]] || [[ -e "${HOME}/.local/share/claude/versions/${cmd}" ]]; then
+    echo claude
+    return
+  fi
+
+  echo "$cmd"
+}
+
+color_pane() {
+  local pane_id="$1"
+  local app="$2"
+  local inactive active
+
+  # Mid-strength dark tints — readable, still distinct at a glance.
+  case "$app" in
+    vim)
+      inactive='fg=colour252,bg=#24352a'
+      active='fg=default,bg=#1c1c1c'
+      ;;
+    claude)
+      inactive='fg=colour252,bg=#352430'
+      active='fg=default,bg=#1c1c1c'
+      ;;
+    codex)
+      inactive='fg=colour252,bg=#353024'
+      active='fg=default,bg=#1c1c1c'
+      ;;
+    *)
+      inactive='fg=colour247,bg=#2a2a2a'
+      active='fg=default,bg=#1c1c1c'
+      ;;
+  esac
+
+  tmux set-option -p -t "$pane_id" @pane_label "$app"
+  tmux set-option -p -t "$pane_id" window-style "$inactive"
+  tmux set-option -p -t "$pane_id" window-active-style "$active"
+}
+
+main() {
+  local pane_id cmd title app
+  while read -r pane_id cmd title; do
+    app=$(detect_app "$cmd" "$title")
+    color_pane "$pane_id" "$app"
+  done < <(tmux list-panes -F '#{pane_id} #{pane_current_command} #{pane_title}')
+}
+
+main
