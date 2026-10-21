@@ -1,0 +1,246 @@
+#!/usr/bin/env bash
+# ttf (time to first): jump to a project's tmux session, creating it if needed,
+# starting its dev server and opening the browser once the server prints a URL.
+#
+# Usage:
+#   ttf [open] [project|path|zoxide query] [--detach] [--gui] [--no-server] [--no-browser]
+#   ttf list [--json]
+#
+# Projects are the subdirectories of the roots listed in $TTF_ROOTS
+# (colon-separated) or ~/.config/ttf/roots (one dir per line). Both live outside
+# this repo so project names stay private. Running tmux sessions are listed too.
+#
+# Compatible with tnn/zt: same session names, and .tmux.project is sourced the
+# same way. A .tmux.project may set TTF_SERVER (command to run in the "server"
+# window) or TTF_SERVER="" to skip it. Without it, `npm run dev` is used when
+# package.json has a dev script.
+#
+# Written for macOS /bin/bash 3.2, so no associative arrays or mapfile.
+
+set -u
+
+export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+
+die() { echo "ttf: $*" >&2; exit 1; }
+
+session_name_for() {
+    # Same rule as tmux_project_session_name in zsh/functions.
+    echo "$(basename "$1" | tr '[:upper:]' '[:lower:]' | tr -cs '[:alnum:]' '-' | sed 's/^-//; s/-$//')"
+}
+
+has_session() { tmux has-session -t "=$1" 2>/dev/null; }
+
+roots() {
+    local list=""
+    if [ -n "${TTF_ROOTS:-}" ]; then
+        list="$(echo "$TTF_ROOTS" | tr ':' '\n')"
+    elif [ -f "$HOME/.config/ttf/roots" ]; then
+        list="$(grep -v '^[[:space:]]*#' "$HOME/.config/ttf/roots")"
+    fi
+    echo "$list" | sed "s|^~|$HOME|" | while read -r r; do
+        [ -n "$r" ] && [ -d "$r" ] && echo "$r"
+    done
+}
+
+# Lines of "name<TAB>path" for every project dir and every running session.
+projects() {
+    {
+        roots | while read -r root; do
+            for d in "$root"/*/; do
+                [ -d "$d" ] || continue
+                d="${d%/}"
+                printf '%s\t%s\n' "$(session_name_for "$d")" "$d"
+            done
+        done
+        # tmux escapes a tab inside -F, so add it here.
+        tmux list-sessions -F '#{session_name}' 2>/dev/null | while read -r s; do
+            printf '%s\t%s\n' "$s" "$(tmux display-message -p -t "=$s:" '#{session_path}')"
+        done
+    } | awk -F'\t' '!seen[$1]++'
+}
+
+json_escape() { printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'; }
+
+cmd_list() {
+    local json=0 first=1 name path running url attached
+    [ "${1:-}" = "--json" ] && json=1
+    [ $json -eq 1 ] && printf '['
+    while IFS="$(printf '\t')" read -r name path; do
+        running=false; url=""; attached=false
+        if has_session "$name"; then
+            running=true
+            url="$(tmux show-options -qv -t "=$name:" @ttf_url 2>/dev/null)"
+            [ "$(tmux display-message -p -t "=$name:" '#{session_attached}')" != "0" ] && attached=true
+        fi
+        if [ $json -eq 1 ]; then
+            [ $first -eq 1 ] || printf ','
+            first=0
+            printf '{"name":"%s","path":"%s","running":%s,"attached":%s,"url":"%s"}' \
+                "$(json_escape "$name")" "$(json_escape "$path")" "$running" "$attached" "$(json_escape "$url")"
+        else
+            printf '%s\t%s\t%s\t%s\n' "$name" "$([ $running = true ] && echo running || echo -)" "$path" "$url"
+        fi
+    done < <(projects)
+    [ $json -eq 1 ] && printf ']\n'
+}
+
+# Print the directory for a project name, path or zoxide query.
+resolve_dir() {
+    local q="$1" matches count
+    if [ -z "$q" ]; then pwd; return; fi
+    if [ -d "$q" ]; then (cd "$q" && pwd); return; fi
+
+    matches="$(projects | awk -F'\t' -v q="$q" '$1 == q { print $2; exit }')"
+    if [ -z "$matches" ]; then
+        matches="$(projects | awk -F'\t' -v q="$(echo "$q" | tr '[:upper:]' '[:lower:]')" 'index($1, q) { print $2 }')"
+    fi
+    count="$(printf '%s' "$matches" | grep -c . || true)"
+    if [ "$count" = "1" ]; then echo "$matches"; return; fi
+    if [ "$count" -gt 1 ] 2>/dev/null; then
+        echo "ttf: '$q' matches several projects:" >&2
+        echo "$matches" | sed 's/^/  /' >&2
+        return 1
+    fi
+    if command -v zoxide >/dev/null 2>&1; then
+        zoxide query -- "$q" 2>/dev/null && return
+    fi
+    return 1
+}
+
+default_server_cmd() {
+    local dir="$1"
+    if [ -f "$dir/package.json" ] && grep -q '"dev"[[:space:]]*:' "$dir/package.json"; then
+        echo "npm run dev"
+    fi
+}
+
+create_session() {
+    local name="$1" dir="$2" with_server="$3" server_cmd
+    tmux new-session -d -s "$name" -c "$dir" || return $?
+    tmux set-option -q -t "=$name:" @ttf_dir "$dir"
+
+    unset TTF_SERVER
+    if [ -f "$dir/.tmux.project" ]; then
+        export TMUX_PROJECT_SESSION="$name"
+        export TMUX_PROJECT_DIR="$dir"
+        # Source it in a subshell so it can't leak into ttf, and hand back only TTF_SERVER.
+        local from_project
+        # shellcheck disable=SC1091
+        from_project="$(cd "$dir" && . ./.tmux.project >&2; printf '%s' "${TTF_SERVER-__unset__}")"
+        [ "$from_project" = "__unset__" ] || TTF_SERVER="$from_project"
+    else
+        # Same default layout as tnn: 2 windows, the first split in two.
+        tmux split-window -h -t "=$name:" -c "$dir"
+        tmux new-window -t "=$name:" -c "$dir"
+    fi
+
+    if [ "$with_server" = 1 ]; then
+        server_cmd="${TTF_SERVER-$(default_server_cmd "$dir")}"
+        if [ -n "$server_cmd" ]; then
+            tmux new-window -d -t "=$name:" -n server -c "$dir"
+            tmux send-keys -t "=$name:server" "$server_cmd" Enter
+            tmux set-option -q -t "=$name:" @ttf_server "$server_cmd"
+        fi
+    fi
+    tmux select-window -t "=$name:^"
+}
+
+open_url() {
+    if [ -n "${SSH_CONNECTION:-}${MOSH_CONNECTION:-}" ]; then
+        return 0 # remote: the URL is in @ttf_url and the server pane
+    elif command -v open >/dev/null 2>&1 && [ "$(uname -s)" = Darwin ]; then
+        open "$1"
+    elif command -v xdg-open >/dev/null 2>&1; then
+        xdg-open "$1" >/dev/null 2>&1
+    fi
+}
+
+# Wait for the server pane to print a URL, store it on the session, open it.
+cmd_watch_url() {
+    local name="$1" open_browser="${2:-1}" i text url
+    for i in $(seq 1 120); do
+        has_session "$name" || return 0
+        text="$(tmux capture-pane -p -J -S -200 -t "=$name:server" 2>/dev/null | sed 's/\x1b\[[0-9;]*m//g')"
+        url="$(echo "$text" | grep -oE 'https?://[A-Za-z0-9._-]*localhost(:[0-9]+)?[^[:space:]]*' | head -1)"
+        [ -z "$url" ] && url="$(echo "$text" | grep -oE 'https?://[A-Za-z0-9._-]+:[0-9]+[^[:space:]]*' | head -1)"
+        url="$(echo "$url" | sed "s/[]).,;>'\"]*\$//")"
+        if [ -n "$url" ]; then
+            tmux set-option -q -t "=$name:" @ttf_url "$url"
+            [ "$open_browser" = 1 ] && open_url "$url"
+            return 0
+        fi
+        sleep 0.5
+    done
+}
+
+# From outside a terminal (Raycast): bring iTerm forward on the session.
+focus_gui() {
+    local name="$1" client
+    client="$(tmux list-clients -F '#{client_activity} #{client_name}' 2>/dev/null | sort -rn | head -1 | cut -d' ' -f2-)"
+    if [ -n "$client" ]; then
+        tmux switch-client -c "$client" -t "=$name"
+        open -a iTerm
+    else
+        osascript \
+            -e 'tell application "iTerm"' \
+            -e 'activate' \
+            -e 'set w to (create window with default profile)' \
+            -e "tell current session of w to write text \"tmux attach -t '=$name'\"" \
+            -e 'end tell' >/dev/null
+    fi
+}
+
+attach() {
+    if [ -n "${TMUX:-}" ]; then
+        tmux switch-client -t "=$1"
+    else
+        exec tmux attach-session -t "=$1"
+    fi
+}
+
+cmd_open() {
+    local query="" name="" dir mode=attach with_server=1 browser=1 created=0
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --detach) mode=detach ;;
+            --gui) mode=gui ;;
+            --no-server) with_server=0 ;;
+            --no-browser) browser=0 ;;
+            --name) shift; name="${1:-}" ;;
+            -h|--help) sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; return 0 ;;
+            -*) die "unknown option $1" ;;
+            *) query="$1" ;;
+        esac
+        shift
+    done
+    command -v tmux >/dev/null 2>&1 || die "tmux not found"
+
+    if [ -z "$name" ] && [ -n "$query" ] && has_session "$query"; then
+        name="$query"
+    else
+        dir="$(resolve_dir "$query")" || die "no project matches '$query'"
+        [ -n "$name" ] || name="$(session_name_for "$dir")"
+        if ! has_session "$name"; then
+            create_session "$name" "$dir" "$with_server" || die "could not create session $name"
+            created=1
+        fi
+    fi
+
+    if [ $created -eq 1 ] && [ -n "$(tmux show-options -qv -t "=$name:" @ttf_server)" ]; then
+        nohup "$0" _watch-url "$name" "$browser" >/dev/null 2>&1 &
+    fi
+
+    case "$mode" in
+        detach) echo "$name" ;;
+        gui) focus_gui "$name" ;;
+        attach) attach "$name" ;;
+    esac
+}
+
+case "${1:-}" in
+    list) shift; cmd_list "$@" ;;
+    open) shift; cmd_open "$@" ;;
+    _watch-url) shift; cmd_watch_url "$@" ;;
+    -h|--help|help) sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//' ;;
+    *) cmd_open "$@" ;;
+esac
