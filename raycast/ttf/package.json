@@ -2,7 +2,7 @@
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "ttf",
   "title": "ttf",
-  "description": "Jump to a project's tmux session, creating it and starting its dev server if needed.",
+  "description": "Jump to a project's tmux session, creating it and starting its dev server if needed, and see what your agents are doing.",
   "icon": "command-icon.png",
   "author": "jesusgollonet",
   "license": "MIT",
@@ -12,6 +12,13 @@
       "title": "Open Project",
       "subtitle": "ttf",
       "description": "List projects and tmux sessions, Enter switches to or creates the session.",
+      "mode": "view"
+    },
+    {
+      "name": "agents",
+      "title": "Agents",
+      "subtitle": "ttf",
+      "description": "Coding agents by project, with what each is doing and whether it needs you. Enter jumps to its tmux pane.",
       "mode": "view"
     }
   ],
@@ -23,6 +30,14 @@
       "type": "textfield",
       "required": false,
       "default": "~/.dotfiles/bin/ttf"
+    },
+    {
+      "name": "agentStatusPath",
+      "title": "agent-status path",
+      "description": "Path to the agent-status script.",
+      "type": "textfield",
+      "required": false,
+      "default": "~/.dotfiles/bin/agent-status"
     }
   ],
   "dependencies": {
