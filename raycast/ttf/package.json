@@ -12,7 +12,15 @@
       "title": "Open Project",
       "subtitle": "ttf",
       "description": "List projects and tmux sessions, Enter switches to or creates the session.",
-      "mode": "view"
+      "mode": "view",
+      "arguments": [
+        {
+          "name": "project",
+          "type": "text",
+          "placeholder": "Project name",
+          "required": false
+        }
+      ]
     }
   ],
   "preferences": [
