@@ -28,6 +28,7 @@ ln -s ~/.dotfiles/tmux/tmux.conf .tmux.conf
 curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 
 ln -s ~/.dotfiles/vim/vimrc .vimrc
+ln -s ~/.dotfiles/vim/coc-settings.json ~/.vim/coc-settings.json
 
 vim -c PlugInstall
 ```

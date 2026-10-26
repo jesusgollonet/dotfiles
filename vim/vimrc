@@ -324,7 +324,7 @@ au Filetype supercollider packadd scvim
 "let g:scSplitDirection = "h" 
 "let g:scSplitSize = 40 
 " CoC extensions
-let g:coc_global_extensions = ['coc-tsserver', 'coc-pyright']
+let g:coc_global_extensions = ['coc-tsserver', 'coc-pyright', '@yaegassy/coc-volar']
 inoremap <silent><expr> <TAB>
       \ coc#pum#visible() ? coc#pum#next(1) :
       \ CheckBackspace() ? "\<Tab>" :

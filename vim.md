@@ -60,7 +60,8 @@
 
 ### Completion & LSP
 - **coc.nvim** (`neoclide`) - LSP client / completion engine
-  - Extensions: `coc-tsserver`
+  - Extensions: `coc-tsserver`, `coc-pyright`, `@yaegassy/coc-volar` (Vue SFCs)
+  - Settings: `~/.vim/coc-settings.json` → `~/.dotfiles/vim/coc-settings.json`
   - `Ctrl-space` - trigger completion
   - `gd` - go to definition
   - `gr` - go to references
