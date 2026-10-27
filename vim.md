@@ -60,7 +60,8 @@
 
 ### Completion & LSP
 - **coc.nvim** (`neoclide`) - LSP client / completion engine
-  - Extensions: `coc-tsserver`
+  - Extensions: `coc-tsserver`, `coc-pyright`, `@yaegassy/coc-volar` (Vue SFCs)
+  - Settings: `~/.vim/coc-settings.json` → `~/.dotfiles/vim/coc-settings.json`
   - `Ctrl-space` - trigger completion
   - `gd` - go to definition
   - `gr` - go to references
@@ -90,6 +91,13 @@
 - **seoul256.vim** (`junegunn`) - Color scheme
 - **plenary.nvim** (`nvim-lua`) - Lua utility library
 - **telescope.nvim** (`nvim-telescope`) - Fuzzy finder framework
+
+## Ask the Agent (`vim/agent.vim`)
+Asks the agent in the tmux pane to the right, without leaving Vim.
+- visual `<leader>a` - ask about the selection (popup under it, Enter send, Esc cancel)
+- `<leader>A` - ask about the cursor line, or follow up on the thread there
+- The message carries the file, line range, code and coc diagnostics, and asks the agent to also pipe a short answer to `vim-reply <id>`, which shows as virtual text below the lines
+- `:AgentShow` full answer in the preview window, `:AgentToggle` hide/show, `:AgentClear` drop this buffer's threads
 
 ## Misc Mappings
 - `<leader>nf` - new file in current directory

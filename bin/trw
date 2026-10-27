@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+# Remove a tnw worktree and its tmux window after confirmation; keep the branch.
+# Usage: trw [--window @id]
+set -euo pipefail
+export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
+
+die() { printf 'trw: %s\n' "$*" >&2; exit 1; }
+if [ -t 0 ]; then
+    trap 'status=$?; if [ "$status" -ne 0 ]; then printf "\nPress Enter to close."; read -r _ || true; fi' EXIT
+fi
+trap 'exit 0' INT
+[ -n "${TMUX:-}" ] || die 'run this inside a tmux session'
+case "$#:${1:-}" in
+    0:) window="$(tmux display-message -p -t "${TMUX_PANE:-}" '#{window_id}')" ;;
+    2:--window) window="$2" ;;
+    *) die 'usage: trw [--window @id]' ;;
+esac
+case "$window" in @*[!0-9]*|@|'') die 'invalid window ID' ;; @*) ;; *) die 'invalid window ID' ;; esac
+worktree="$(tmux show-options -wqv -t "$window" @worktree_path)"
+branch="$(tmux show-options -wqv -t "$window" @worktree_branch)"
+[ -n "$worktree" ] && [ -n "$branch" ] || die 'this window was not created by tnw'
+main_root="$(git -C "$worktree" -c core.quotePath=false worktree list --porcelain | sed -n '1s/^worktree //p')"
+[ -n "$main_root" ] && [ "$worktree" = "${main_root}.worktrees/$branch" ] || die 'worktree metadata does not match a tnw checkout'
+[ "$(git -C "$worktree" rev-parse --show-toplevel)" = "$worktree" ] || die 'worktree path has changed'
+
+check_safe() {
+    [ "$(tmux show-options -wqv -t "$window" @worktree_path)" = "$worktree" ] || die 'window metadata changed'
+    [ "$(git -C "$worktree" symbolic-ref --quiet --short HEAD)" = "$branch" ] || die 'the checked-out branch has changed'
+    # Git permits deleting ignored files during worktree removal. Protect those too.
+    [ -z "$(git -C "$worktree" status --porcelain --untracked-files=all --ignored)" ] || die 'worktree contains changed, untracked, or ignored files; clean it up first'
+    while IFS='|' read -r other_window path; do
+        if [ "$other_window" != "$window" ]; then
+            case "$path" in "$worktree"|"$worktree"/*) die 'another tmux window is using this worktree' ;; esac
+        fi
+    done < <(tmux list-panes -a -F '#{window_id}|#{pane_current_path}')
+    processes="$(ps -axo pid=,ppid=,tty=)"
+    # When run from a pane prompt, trw itself is a child of that pane's shell.
+    ancestors=" "
+    ancestor=$$
+    while [ "$ancestor" -gt 1 ]; do
+        ancestors+="$ancestor "
+        ancestor="$(ps -o ppid= -p "$ancestor" | tr -d ' ')"
+        [ -n "$ancestor" ] || break
+    done
+    while IFS='|' read -r pid tty command; do
+        case "$command" in bash|zsh|sh|fish|ksh|dash) ;; *) die "pane is running $command; exit programs before cleanup" ;; esac
+        # Catch background and suspended jobs as well as foreground editors/agents.
+        # Only count children on the pane's tty: zsh async helpers (zpty) run on their own.
+        if printf '%s\n' "$processes" | awk -v pid="$pid" -v tty="${tty#/dev/}" -v skip="$ancestors" \
+            '$2 == pid && $3 == tty && index(skip, " " $1 " ") == 0 { found=1 } END { exit !found }'; then
+            die 'pane has running child processes; stop jobs before cleanup'
+        fi
+    done < <(tmux list-panes -t "$window" -F '#{pane_pid}|#{pane_tty}|#{pane_current_command}')
+}
+check_safe
+printf 'Remove worktree: %s\nBranch kept: %s\n\nThis deletes the checkout and closes all panes in this window.\nRemove? [y/N] (Esc / Ctrl-C cancels): ' "$worktree" "$branch"
+IFS= read -r -s -n 1 answer || exit 0
+printf '\n'
+case "$answer" in y|Y) ;; *) exit 0 ;; esac
+# Recheck after confirmation; never force removal or close a window on failure.
+check_safe
+cd "$main_root"
+git worktree remove -- "$worktree"
+tmux kill-window -t "$window"

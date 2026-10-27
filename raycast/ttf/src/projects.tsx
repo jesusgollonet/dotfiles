@@ -4,6 +4,7 @@ import {
   Alert,
   Color,
   Icon,
+  LaunchProps,
   List,
   closeMainWindow,
   confirmAlert,
@@ -14,6 +15,7 @@ import {
 import { usePromise } from "@raycast/utils";
 import { execFile } from "node:child_process";
 import { homedir } from "node:os";
+import { useState } from "react";
 
 type Project = {
   name: string;
@@ -56,7 +58,8 @@ async function openProject(project: Project, extraArgs: string[] = []) {
   }
 }
 
-export default function Command() {
+export default function Command({ arguments: args }: LaunchProps<{ arguments: { project?: string } }>) {
+  const [searchText, setSearchText] = useState(args.project?.trim() ?? "");
   const { data, isLoading, revalidate } = usePromise(listProjects, [], {
     failureToastOptions: { title: "ttf list failed" },
   });
@@ -73,7 +76,13 @@ export default function Command() {
   }
 
   return (
-    <List isLoading={isLoading} searchBarPlaceholder="Project or session">
+    <List
+      filtering={true}
+      isLoading={isLoading}
+      searchBarPlaceholder="Project or session"
+      searchText={searchText}
+      onSearchTextChange={setSearchText}
+    >
       {data?.length === 0 && (
         <List.EmptyView
           icon={Icon.Folder}

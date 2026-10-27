@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# Paste stdin into the agent pane next to a tmux pane and submit it.
+# Usage: agent-send [--from %pane] [--target %pane] < message
+# Without --target, uses $AGENT_PANE, else the nearest pane to the right of
+# --from (default $TMUX_PANE), else the only other pane in its window.
+set -euo pipefail
+
+export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
+
+die() { printf 'agent-send: %s\n' "$*" >&2; exit 1; }
+from="${TMUX_PANE:-}"
+target="${AGENT_PANE:-}"
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        --from) [ "$#" -ge 2 ] || die '--from requires a pane ID'; from="$2"; shift 2 ;;
+        --target) [ "$#" -ge 2 ] || die '--target requires a pane ID'; target="$2"; shift 2 ;;
+        -h|--help) sed -n '2,5s/^# \{0,1\}//p' "$0"; exit 0 ;;
+        *) die "unknown argument: $1" ;;
+    esac
+done
+[ -n "${TMUX:-}" ] || die 'run this inside a tmux session'
+
+if [ -z "$target" ]; then
+    [ -n "$from" ] || die 'no source pane; pass --from or --target'
+    read -r window right top bottom < <(tmux display-message -p -t "$from" \
+        '#{window_id} #{pane_right} #{pane_top} #{pane_bottom}')
+    # Closest pane whose left edge is past ours and that overlaps us vertically.
+    target="$(tmux list-panes -t "$window" -F '#{pane_id} #{pane_left} #{pane_top} #{pane_bottom}' |
+        awk -v r="$right" -v t="$top" -v b="$bottom" \
+            '$2 > r && $3 <= b && $4 >= t && (best == "" || $2 < left) { best = $1; left = $2 } END { print best }')"
+    if [ -z "$target" ]; then
+        others="$(tmux list-panes -t "$window" -F '#{pane_id}' | grep -vxF -- "$from" || true)"
+        if [ -n "$others" ] && [ "$(printf '%s\n' "$others" | wc -l)" -eq 1 ]; then
+            target="$others"
+        fi
+    fi
+    [ -n "$target" ] || die 'no agent pane to the right; pass --target or set AGENT_PANE'
+fi
+
+message="$(cat)"
+[ -n "$message" ] || die 'empty message on stdin'
+buffer="agent-send-$$"
+printf '%s' "$message" | tmux load-buffer -b "$buffer" -
+# Bracketed paste keeps multi-line messages from submitting early.
+tmux paste-buffer -p -d -b "$buffer" -t "$target"
+# Agents ignore an Enter that arrives while they are still handling the paste.
+sleep "${AGENT_SEND_DELAY:-0.3}"
+tmux send-keys -t "$target" Enter
+printf '%s\n' "$target"

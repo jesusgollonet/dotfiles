@@ -1,0 +1,110 @@
+#!/usr/bin/env bash
+# New named worktree + two shell panes in the current tmux session.
+# Usage: tnw [--pane %id] [branch-name]
+# Without a name, prompts interactively (also used by the tmux popup).
+set -euo pipefail
+
+export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
+
+die() { printf 'tnw: %s\n' "$*" >&2; exit 1; }
+pane="${TMUX_PANE:-}"
+if [ "${1:-}" = --pane ]; then
+    [ "$#" -ge 2 ] || die '--pane requires a pane ID'
+    pane="$2"
+    shift 2
+fi
+case "${1:-}" in
+    -h|--help) sed -n '2,5s/^# \{0,1\}//p' "$0"; exit 0 ;;
+esac
+[ "$#" -le 1 ] || die 'usage: tnw [branch-name]'
+if [ "$#" -eq 0 ] && [ -t 0 ]; then
+    # Leave popup failures visible until acknowledged.
+    trap 'status=$?; if [ "$status" -ne 0 ]; then printf "\nPress Enter to close."; read -r _; fi' EXIT
+fi
+[ -n "${TMUX:-}" ] || die 'run this inside a tmux session'
+command -v tmux >/dev/null || die 'tmux not found'
+if [ -n "$pane" ]; then
+    session="$(tmux display-message -p -t "$pane" '#{session_id}')"
+else
+    session="$(tmux display-message -p '#{session_id}')"
+fi
+[ -n "$session" ] || die 'could not determine the current session'
+git rev-parse --show-toplevel >/dev/null 2>&1 || die 'run this inside a Git checkout'
+git rev-parse --verify HEAD >/dev/null 2>&1 || die 'the repository needs an initial commit'
+
+name="${1:-}"
+if [ -z "$name" ]; then
+    if [ -t 0 ]; then
+        trap 'exit 0' INT
+        printf 'New worktree branch (from current HEAD):\nEsc / Ctrl-C to cancel\n> '
+        # Read keys without terminal echo so Escape can cancel before Enter.
+        while true; do
+            IFS= read -r -s -n 1 key || exit 0
+            case "$key" in
+                '') printf '\n'; break ;;
+                $'\e')
+                    # Ignore terminal key sequences (for example arrow keys).
+                    # A standalone Escape cancels after a short sequence timeout.
+                    if IFS= read -r -s -n 1 -t 0.1 next; then
+                        case "$next" in
+                            '['|'O')
+                                while IFS= read -r -s -n 1 -t 0.1 next; do
+                                    case "$next" in [a-zA-Z~]) break ;; esac
+                                done
+                                ;;
+                            *) exit 0 ;;
+                        esac
+                    else
+                        exit 0
+                    fi
+                    ;;
+                $'\003'|$'\004') exit 0 ;;
+                $'\177'|$'\b')
+                    if [ -n "$name" ]; then
+                        name="${name%?}"
+                        printf '\b \b'
+                    fi
+                    ;;
+                $'\025')
+                    while [ -n "$name" ]; do
+                        name="${name%?}"
+                        printf '\b \b'
+                    done
+                    ;;
+                [[:print:]]) name+="$key"; printf '%s' "$key" ;;
+            esac
+        done
+        trap - INT
+    else
+        printf 'New worktree branch (from current HEAD): '
+        IFS= read -r name || exit 0
+    fi
+    [ -n "$name" ] || exit 0
+fi
+# Keep the branch name safe as a path and as a literal tmux window title.
+case "$name" in
+    [!a-zA-Z0-9]*|*[!a-zA-Z0-9._/-]*) die 'use letters, numbers, dots, dashes, underscores or slashes; start with a letter or number' ;;
+esac
+git check-ref-format --branch "$name" >/dev/null 2>&1 || die "invalid branch name: $name"
+if git show-ref --verify --quiet "refs/heads/$name"; then
+    die "branch '$name' already exists; choose a new name"
+fi
+
+# The first entry is the main checkout, including when invoked from a worktree.
+main_root="$(git -c core.quotePath=false worktree list --porcelain | sed -n '1s/^worktree //p')"
+worktree="${main_root}.worktrees/$name"
+[ ! -e "$worktree" ] && [ ! -L "$worktree" ] || die "path already exists: $worktree"
+mkdir -p "$(dirname "$worktree")"
+git worktree add -b "$name" "$worktree" HEAD
+
+# Preserve the checkout if tmux setup fails, and say where to recover it.
+trap 'printf "tnw: window setup failed; branch and worktree kept at %s\n" "$worktree" >&2' ERR
+window="$(tmux new-window -d -P -F '#{window_id}' -t "$session:" -n "$name" -c "$worktree")"
+tmux set-option -w -t "$window" automatic-rename off
+tmux set-option -w -t "$window" allow-rename off
+tmux set-option -w -t "$window" @worktree_path "$worktree"
+tmux set-option -w -t "$window" @worktree_branch "$name"
+tmux split-window -d -h -t "$window" -c "$worktree"
+tmux select-window -t "$window"
+trap - ERR
+printf 'Opened %s in %s\n' "$name" "$worktree"

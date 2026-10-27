@@ -324,7 +324,7 @@ au Filetype supercollider packadd scvim
 "let g:scSplitDirection = "h" 
 "let g:scSplitSize = 40 
 " CoC extensions
-let g:coc_global_extensions = ['coc-tsserver', 'coc-pyright']
+let g:coc_global_extensions = ['coc-tsserver', 'coc-pyright', '@yaegassy/coc-volar']
 inoremap <silent><expr> <TAB>
       \ coc#pum#visible() ? coc#pum#next(1) :
       \ CheckBackspace() ? "\<Tab>" :
@@ -405,6 +405,9 @@ let g:claude_map_implement = "<Leader>ci"
 let g:claude_map_open_chat = "<Leader>cl"
 let g:claude_map_send_chat_message = "<C-]>"
 let g:claude_map_cancel_response = "<Leader>cx"
+
+" Ask the agent in the right tmux pane about the selection (vim/agent.vim)
+execute 'source' fnameescape(fnamemodify(resolve(expand('<sfile>:p')), ':h') . '/agent.vim')
 
 
 " Copy current file path to clipboard
