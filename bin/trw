@@ -70,5 +70,10 @@ confirmed_ignored="$ignored"
 check_safe
 [ "$ignored" = "$confirmed_ignored" ] || die 'ignored files changed since confirmation; run trw again'
 cd "$main_root"
-git worktree remove -- "$worktree"
+if ! git worktree remove -- "$worktree"; then
+    # A watcher can recreate empty directories mid-deletion after Git has unregistered the worktree.
+    ! git worktree list --porcelain | grep -qxF "worktree $worktree" || die 'worktree removal failed'
+    find "$worktree" -depth -type d -empty -delete || true
+    [ ! -e "$worktree" ] || die "worktree unregistered but files remain at $worktree"
+fi
 tmux kill-window -t "$window"
