@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Post an agent's answer back to the Vim question it came from (vim/agent.vim).
 # Usage: vim-reply <id> [answer...]    (reads the answer from stdin without one)
-# Vim shows the answer as virtual text below the lines that were asked about.
+# Vim marks the lines that were asked about; <leader>v opens the answer in a split.
 set -euo pipefail
 
 die() { printf 'vim-reply: %s\n' "$*" >&2; exit 1; }

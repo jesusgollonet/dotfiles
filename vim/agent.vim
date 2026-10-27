@@ -1,9 +1,9 @@
 " Ask the agent in the tmux pane to the right about the code in front of you.
 " Visual <leader>a asks about the selection, <leader>A about the cursor line
 " (or follows up on the thread there). The question goes out through
-" bin/agent-send; answers the agent pipes to `vim-reply <id>` appear as virtual
-" text below the lines asked about.
-"   :AgentShow    open the full answer under the cursor in the preview window
+" bin/agent-send; answers the agent pipes to `vim-reply <id>` show up as a one-line
+" marker below the lines asked about.
+"   <leader>v / :AgentShow  open the answer on the cursor line in a markdown split (q closes)
 "   :AgentToggle  hide/show answers
 "   :AgentClear   drop the threads in this buffer
 
@@ -121,22 +121,15 @@ function! s:Render(id) abort
   endif
   " Callbacks can run with another buffer current, so measure the indent directly.
   let indent = repeat(' ', strdisplaywidth(matchstr(getbufline(ask.bufnr, lnum)[0], '^\s*')))
+  " Keep it to one line; the answer itself opens in a split (s:Show).
   if ask.state ==# 'pending'
-    let lines = [printf('%s⋯ #%s %s', indent, a:id, ask.question)]
+    let text = printf('%s⋯ #%s %s', indent, a:id, ask.question)
   else
-    let body = readfile(s:ReplyFile(a:id))
-    while !empty(body) && body[-1] =~# '^\s*$'
-      call remove(body, -1)
-    endwhile
-    let lines = [printf('%s╭ #%s %s', indent, a:id, ask.question)]
-    let lines += map(body[: g:agent_reply_lines - 1], {_, l -> indent . '│ ' . l})
-    let more = len(body) - g:agent_reply_lines
-    call add(lines, indent . '╰' . (more > 0 ? printf(' %d more lines — :AgentShow', more) : ''))
+    let leader = get(g:, 'mapleader', '\')
+    let text = printf('%s╰ #%s %s · answered, %sv to open', indent, a:id, ask.question, leader)
   endif
-  for text in lines
-    call prop_add(lnum, 0, {'type': 'agent_text_' . a:id, 'text': text, 'text_align': 'below',
-          \ 'text_wrap': 'wrap', 'bufnr': ask.bufnr})
-  endfor
+  call prop_add(lnum, 0, {'type': 'agent_text_' . a:id, 'text': text, 'text_align': 'below',
+        \ 'text_wrap': 'truncate', 'bufnr': ask.bufnr})
 endfunction
 
 function! AgentPoll() abort
@@ -174,7 +167,22 @@ function! s:Show() abort
     echomsg 'No agent answer on this line'
     return
   endif
-  execute 'pedit' fnameescape(s:ReplyFile(id))
+  let file = s:ReplyFile(id)
+  " Reuse the answer window if one is open.
+  let winid = get(filter(gettabinfo(tabpagenr())[0].windows,
+        \ {_, w -> getwinvar(w, 'agent_answer', 0)}), 0, 0)
+  let height = min([max([len(readfile(file)) + 1, 5]), &lines / 3])
+  if winid
+    call win_gotoid(winid)
+    execute 'edit' fnameescape(file)
+    execute 'resize' height
+  else
+    execute 'botright' height 'split' fnameescape(file)
+    let w:agent_answer = 1
+  endif
+  setlocal filetype=markdown nomodifiable readonly bufhidden=wipe noswapfile
+  setlocal wrap linebreak breakindent nonumber norelativenumber nolist signcolumn=no
+  nnoremap <buffer> <silent> q :close<CR>
 endfunction
 
 function! s:Toggle() abort
@@ -259,6 +267,7 @@ endfunction
 
 xnoremap <silent> <leader>a :<C-u>call <SID>Prompt(line("'<"), line("'>"), visualmode())<CR>
 nnoremap <silent> <leader>A :call <SID>Prompt(line('.'), line('.'), '')<CR>
+nnoremap <silent> <leader>v :AgentShow<CR>
 command! AgentShow call s:Show()
 command! AgentToggle call s:Toggle()
 command! AgentClear call s:Clear()
