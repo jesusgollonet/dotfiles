@@ -11,7 +11,7 @@ fi
 trap 'exit 0' INT
 [ -n "${TMUX:-}" ] || die 'run this inside a tmux session'
 case "$#:${1:-}" in
-    0:) window="$(tmux display-message -p '#{window_id}')" ;;
+    0:) window="$(tmux display-message -p -t "${TMUX_PANE:-}" '#{window_id}')" ;;
     2:--window) window="$2" ;;
     *) die 'usage: trw [--window @id]' ;;
 esac
@@ -33,14 +33,24 @@ check_safe() {
             case "$path" in "$worktree"|"$worktree"/*) die 'another tmux window is using this worktree' ;; esac
         fi
     done < <(tmux list-panes -a -F '#{window_id}|#{pane_current_path}')
-    processes="$(ps -axo ppid=)"
-    while IFS='|' read -r pid command; do
+    processes="$(ps -axo pid=,ppid=,tty=)"
+    # When run from a pane prompt, trw itself is a child of that pane's shell.
+    ancestors=" "
+    ancestor=$$
+    while [ "$ancestor" -gt 1 ]; do
+        ancestors+="$ancestor "
+        ancestor="$(ps -o ppid= -p "$ancestor" | tr -d ' ')"
+        [ -n "$ancestor" ] || break
+    done
+    while IFS='|' read -r pid tty command; do
         case "$command" in bash|zsh|sh|fish|ksh|dash) ;; *) die "pane is running $command; exit programs before cleanup" ;; esac
-        # Catch background jobs as well as foreground editors/agents.
-        if printf '%s\n' "$processes" | awk -v pid="$pid" '$1 == pid { found=1 } END { exit !found }'; then
+        # Catch background and suspended jobs as well as foreground editors/agents.
+        # Only count children on the pane's tty: zsh async helpers (zpty) run on their own.
+        if printf '%s\n' "$processes" | awk -v pid="$pid" -v tty="${tty#/dev/}" -v skip="$ancestors" \
+            '$2 == pid && $3 == tty && index(skip, " " $1 " ") == 0 { found=1 } END { exit !found }'; then
             die 'pane has running child processes; stop jobs before cleanup'
         fi
-    done < <(tmux list-panes -t "$window" -F '#{pane_pid}|#{pane_current_command}')
+    done < <(tmux list-panes -t "$window" -F '#{pane_pid}|#{pane_tty}|#{pane_current_command}')
 }
 check_safe
 printf 'Remove worktree: %s\nBranch kept: %s\n\nThis deletes the checkout and closes all panes in this window.\nRemove? [y/N] (Esc / Ctrl-C cancels): ' "$worktree" "$branch"
