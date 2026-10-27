@@ -26,8 +26,9 @@ main_root="$(git -C "$worktree" -c core.quotePath=false worktree list --porcelai
 check_safe() {
     [ "$(tmux show-options -wqv -t "$window" @worktree_path)" = "$worktree" ] || die 'window metadata changed'
     [ "$(git -C "$worktree" symbolic-ref --quiet --short HEAD)" = "$branch" ] || die 'the checked-out branch has changed'
-    # Git permits deleting ignored files during worktree removal. Protect those too.
-    [ -z "$(git -C "$worktree" status --porcelain --untracked-files=all --ignored)" ] || die 'worktree contains changed, untracked, or ignored files; clean it up first'
+    [ -z "$(git -C "$worktree" status --porcelain --untracked-files=all)" ] || die 'worktree contains changed or untracked files; clean it up first'
+    # Git deletes ignored files during worktree removal; list them so the prompt can show them.
+    ignored="$(git -C "$worktree" ls-files --others --ignored --exclude-standard --directory)"
     while IFS='|' read -r other_window path; do
         if [ "$other_window" != "$window" ]; then
             case "$path" in "$worktree"|"$worktree"/*) die 'another tmux window is using this worktree' ;; esac
@@ -53,12 +54,21 @@ check_safe() {
     done < <(tmux list-panes -t "$window" -F '#{pane_pid}|#{pane_tty}|#{pane_current_command}')
 }
 check_safe
-printf 'Remove worktree: %s\nBranch kept: %s\n\nThis deletes the checkout and closes all panes in this window.\nRemove? [y/N] (Esc / Ctrl-C cancels): ' "$worktree" "$branch"
+printf 'Remove worktree: %s\nBranch kept: %s\n' "$worktree" "$branch"
+if [ -n "$ignored" ]; then
+    printf '\nIgnored files that will be deleted:\n'
+    printf '%s\n' "$ignored" | head -n 15 | sed 's/^/  /'
+    count="$(printf '%s\n' "$ignored" | wc -l | tr -d ' ')"
+    [ "$count" -le 15 ] || printf '  ... and %s more\n' "$((count - 15))"
+fi
+printf '\nThis deletes the checkout and closes all panes in this window.\nRemove? [y/N] (Esc / Ctrl-C cancels): '
 IFS= read -r -s -n 1 answer || exit 0
 printf '\n'
 case "$answer" in y|Y) ;; *) exit 0 ;; esac
 # Recheck after confirmation; never force removal or close a window on failure.
+confirmed_ignored="$ignored"
 check_safe
+[ "$ignored" = "$confirmed_ignored" ] || die 'ignored files changed since confirmation; run trw again'
 cd "$main_root"
 git worktree remove -- "$worktree"
 tmux kill-window -t "$window"
