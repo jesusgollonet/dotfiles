@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# Post an agent's answer back to the Vim question it came from (vim/agent.vim).
+# Usage: vim-reply <id> [answer...]    (reads the answer from stdin without one)
+# Vim marks the lines that were asked about; <leader>v opens the answer in a split.
+set -euo pipefail
+
+die() { printf 'vim-reply: %s\n' "$*" >&2; exit 1; }
+case "${1:-}" in
+    -h|--help) sed -n '2,4s/^# \{0,1\}//p' "$0"; exit 0 ;;
+esac
+[ "$#" -ge 1 ] || die 'usage: vim-reply <id> [answer...]'
+id="${1#\#}"
+shift
+case "$id" in
+    ''|*[!0-9a-f]*) die "invalid id: $id" ;;
+esac
+
+dir="${XDG_CACHE_HOME:-$HOME/.cache}/vim-agent/replies"
+mkdir -p "$dir"
+# Vim polls for <id>.md, so only rename the answer into place once it is complete.
+tmp="$(mktemp "$dir/.$id.XXXXXX")"
+trap 'rm -f "$tmp"' EXIT
+if [ "$#" -gt 0 ]; then
+    printf '%s\n' "$*" > "$tmp"
+else
+    cat > "$tmp"
+fi
+[ -s "$tmp" ] || die 'empty answer'
+mv "$tmp" "$dir/$id.md"
+printf 'Sent to Vim (#%s).\n' "$id"

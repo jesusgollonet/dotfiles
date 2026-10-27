@@ -406,6 +406,9 @@ let g:claude_map_open_chat = "<Leader>cl"
 let g:claude_map_send_chat_message = "<C-]>"
 let g:claude_map_cancel_response = "<Leader>cx"
 
+" Ask the agent in the right tmux pane about the selection (vim/agent.vim)
+execute 'source' fnameescape(fnamemodify(resolve(expand('<sfile>:p')), ':h') . '/agent.vim')
+
 
 " Copy current file path to clipboard
 nnoremap <silent> <leader>cp :call <SID>CopyToSystemClipboard(expand('%:p'))<CR>
