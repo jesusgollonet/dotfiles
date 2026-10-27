@@ -97,6 +97,20 @@ worktree="${main_root}.worktrees/$name"
 mkdir -p "$(dirname "$worktree")"
 git worktree add -b "$name" "$worktree" HEAD
 
+# Bring over ignored local files from the main checkout: .env files and node_modules
+# by default, plus gitignore-style patterns listed in the main checkout's .worktreeinclude.
+# cp -c clones on APFS, so even large node_modules copy fast and share disk until changed.
+include_args=(--exclude='.env*' --exclude='node_modules/')
+[ -f "$main_root/.worktreeinclude" ] && include_args+=(--exclude-from="$main_root/.worktreeinclude")
+while IFS= read -r -d '' path; do
+    git -C "$main_root" check-ignore -q -- "$path" || continue
+    path="${path%/}"
+    [ ! -e "$worktree/$path" ] || continue
+    mkdir -p "$(dirname "$worktree/$path")"
+    printf 'Copying %s\n' "$path"
+    cp -Rc "$main_root/$path" "$worktree/$path" || printf 'tnw: could not copy %s\n' "$path" >&2
+done < <(git -C "$main_root" ls-files -z --others --ignored --directory "${include_args[@]}")
+
 # Preserve the checkout if tmux setup fails, and say where to recover it.
 trap 'printf "tnw: window setup failed; branch and worktree kept at %s\n" "$worktree" >&2' ERR
 window="$(tmux new-window -d -P -F '#{window_id}' -t "$session:" -n "$name" -c "$worktree")"
