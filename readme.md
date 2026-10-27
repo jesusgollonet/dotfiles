@@ -50,3 +50,32 @@ Project roots are kept out of the repo, in `~/.config/ttf/roots` (one dir per li
 Sessions use the same names as `tnn`/`zt`, and `.tmux.project` still sets the layout. It can also set `TTF_SERVER="..."` (or `TTF_SERVER=""` for none); otherwise `npm run dev` runs when `package.json` has a dev script.
 
 `raycast/ttf` is the Raycast front end: `cd raycast/ttf && npm install && npm run dev` once to import it into Raycast.
+
+## agent-status
+`bin/agent-status` keeps track of what each coding agent is doing, so you can kick one off in a worktree, switch away and still know what it's up to and whether it needs you. The agents' own hooks report three states: ● working, ? needs you (a permission prompt), ✓ done. The summary is the first line of the last real prompt (short replies like "yes" keep the old one), and `agent-status name "<text>"` pins your own.
+
+Where it shows up:
+- tmux: next to each window name, in the pane border, and as one dot per agent on the right of the status line (every session, so you see an agent waiting elsewhere)
+- Raycast: the ttf extension's Agents command lists them by project, Enter jumps to the pane
+- notifications on ? and ✓: a Mac notification (click to jump) unless you're looking at that pane, and `ntfy.sh/$NTFY_TOPIC` when the Mac has been idle for 5 min (`AGENT_STATUS_PHONE_IDLE`, in seconds; 0 = always, -1 = never)
+- `agent-status list` in a terminal
+
+State lives in `~/.local/state/ttf/agents/`, one JSON file per tmux pane, and is dropped when the pane or the agent session ends. Needs `jq`.
+
+Claude Code, in `~/.claude/settings.json`:
+```json
+{
+  "hooks": {
+    "UserPromptSubmit": [{ "hooks": [{ "type": "command", "command": "~/.dotfiles/bin/agent-status claude" }] }],
+    "PostToolUse": [{ "matcher": "*", "hooks": [{ "type": "command", "command": "~/.dotfiles/bin/agent-status claude" }] }],
+    "Notification": [{ "hooks": [{ "type": "command", "command": "~/.dotfiles/bin/agent-status claude" }] }],
+    "Stop": [{ "hooks": [{ "type": "command", "command": "~/.dotfiles/bin/agent-status claude" }] }],
+    "SessionEnd": [{ "hooks": [{ "type": "command", "command": "~/.dotfiles/bin/agent-status claude" }] }]
+  }
+}
+```
+
+Codex, in `~/.codex/config.toml` (absolute path, Codex doesn't expand `~`). Codex only reports finished turns, so its agents go straight to ✓:
+```toml
+notify = ["/Users/<you>/.dotfiles/bin/agent-status", "codex"]
+```

@@ -1,0 +1,286 @@
+#!/usr/bin/env bash
+# agent-status: keep track of what each coding agent is doing and whether it
+# needs you. Agent hooks call it, and tmux, Raycast and notifications read it.
+#
+# Usage:
+#   agent-status claude              Claude Code hook (reads the hook JSON on stdin)
+#   agent-status codex <json>        Codex notify command (JSON as the last argument)
+#   agent-status list [--json]       agents, most recent first
+#   agent-status name <text>         pin a summary for the agent in this pane
+#   agent-status focus <pane>        switch tmux to that pane and bring iTerm forward
+#   agent-status rm <pane>           forget an agent (or its session id outside tmux)
+#
+# One JSON file per agent in ~/.local/state/ttf/agents, keyed by tmux pane
+# (or by session id outside tmux). States: working, waiting (needs you), done.
+# The pane also gets @agent_state and @agent_summary, which tmux.conf shows.
+#
+# Notifications on waiting/done: terminal-notifier unless you're looking at
+# that pane, and ntfy.sh/$NTFY_TOPIC once the Mac has been idle for
+# $AGENT_STATUS_PHONE_IDLE seconds (default 300; 0 = always, -1 = never).
+#
+# Needs jq. Written for macOS /bin/bash 3.2.
+
+set -u
+
+export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+
+STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/ttf/agents"
+SUMMARY_MAX=48
+
+die() { echo "agent-status: $*" >&2; exit 1; }
+
+have() { command -v "$1" >/dev/null 2>&1; }
+
+# display-message prints nothing (and still exits 0) for a pane that's gone.
+pane_alive() { [ "$(tmux display-message -p -t "$1" '#{pane_id}' 2>/dev/null)" = "$1" ]; }
+
+key_for() {
+    # $1 = pane id (%12) or a session id
+    printf '%s' "$1" | tr -c '[:alnum:]_-' '_'
+}
+
+# First line of a prompt, squashed to fit a window title.
+summarize() {
+    # No "#", tmux would read it as a format.
+    printf '%s' "$1" | tr '\n\t#' '   ' | sed 's/  */ /g; s/^ //; s/ $//' | cut -c1-"$SUMMARY_MAX"
+}
+
+# Seconds since the last keyboard/mouse input on macOS, or empty elsewhere.
+idle_seconds() {
+    have ioreg || return 0
+    ioreg -c IOHIDSystem 2>/dev/null | awk '/HIDIdleTime/ { print int($NF / 1000000000); exit }'
+}
+
+# True when the pane is the one on screen in an attached tmux client.
+looking_at() {
+    local pane="$1"
+    [ -n "$pane" ] || return 1
+    [ "$(tmux display-message -p -t "$pane" '#{&&:#{session_attached},#{&&:#{window_active},#{pane_active}}}' 2>/dev/null)" = 1 ]
+}
+
+notify() {
+    local state="$1" pane="$2" title="$3" message="$4" topic idle phone_idle
+    [ "$state" = waiting ] && title="? $title" || title="✓ $title"
+
+    if ! looking_at "$pane" && have terminal-notifier; then
+        local args=(-title "$title" -message "$message" -group "agent-status-${pane:-$title}")
+        [ -n "$pane" ] && args+=(-execute "$HOME/.dotfiles/bin/agent-status focus '$pane'")
+        terminal-notifier "${args[@]}" >/dev/null 2>&1 &
+    fi
+
+    topic="${NTFY_TOPIC:-}"
+    [ -z "$topic" ] && topic="$(tmux show-environment -g NTFY_TOPIC 2>/dev/null | sed -n 's/^NTFY_TOPIC=//p')"
+    phone_idle="${AGENT_STATUS_PHONE_IDLE:-300}"
+    [ -n "$topic" ] && [ "$phone_idle" -ge 0 ] 2>/dev/null || return 0
+    idle="$(idle_seconds)"
+    if [ "$phone_idle" = 0 ] || [ "${idle:-0}" -ge "$phone_idle" ]; then
+        # JSON body, since a header can't carry the ✓ in the title.
+        jq -n --arg topic "$topic" --arg title "$title" --arg message "$message" \
+            '{topic:$topic, title:$title, message:$message}' |
+            curl -s -m 5 -d @- https://ntfy.sh >/dev/null 2>&1 &
+    fi
+}
+
+# Write the status file and the tmux pane options.
+# Args: agent session_id cwd state prompt
+record() {
+    local agent="$1" session="$2" cwd="$3" state="$4" prompt="$5"
+    local pane="${TMUX_PANE:-}" key file old_state="" summary="" pinned=false now
+    local top="" project="" branch="" tmux_session="" window=""
+
+    [ -n "$pane$session" ] || return 0
+    have jq || die "jq not found"
+    mkdir -p "$STATE_DIR"
+    key="$(key_for "${pane:-$session}")"
+    file="$STATE_DIR/$key.json"
+    now="$(date +%s)"
+
+    if [ -f "$file" ]; then
+        old_state="$(jq -r '.state // ""' "$file" 2>/dev/null)"
+        summary="$(jq -r '.summary // ""' "$file" 2>/dev/null)"
+        pinned="$(jq -r '.pinned // false' "$file" 2>/dev/null)"
+    fi
+
+    # A new prompt replaces the summary unless it was pinned or is a short
+    # reply like "yes" or "go on" to an earlier task.
+    if [ -n "$prompt" ] && [ "$pinned" != true ]; then
+        if [ -z "$summary" ] || [ ${#prompt} -ge 20 ]; then
+            summary="$(summarize "$prompt")"
+        fi
+    fi
+
+    # Tool calls fire constantly, only write when something changed.
+    [ "$state" = "$old_state" ] && [ -z "$prompt" ] && [ -f "$file" ] && return 0
+
+    if [ -d "$cwd" ] && top="$(git -C "$cwd" rev-parse --show-toplevel 2>/dev/null)"; then
+        # Worktrees share the main checkout's .git, so name the project after it.
+        local common
+        common="$(git -C "$cwd" rev-parse --path-format=absolute --git-common-dir)"
+        project="$(basename "$(dirname "$common")")"
+        branch="$(git -C "$cwd" branch --show-current 2>/dev/null)"
+    else
+        top="$cwd"
+        project="$(basename "$cwd")"
+    fi
+    if [ -n "$pane" ]; then
+        tmux_session="$(tmux display-message -p -t "$pane" '#{session_name}' 2>/dev/null)"
+        window="$(tmux display-message -p -t "$pane" '#{window_index}' 2>/dev/null)"
+        tmux set-option -p -t "$pane" @agent_state "$state" 2>/dev/null
+        tmux set-option -p -t "$pane" @agent_summary "$summary" 2>/dev/null
+    fi
+
+    jq -n \
+        --arg agent "$agent" --arg session_id "$session" --arg pane "$pane" \
+        --arg tmux_session "$tmux_session" --arg window "$window" \
+        --arg cwd "$cwd" --arg worktree "$top" --arg project "$project" --arg branch "$branch" \
+        --arg state "$state" --arg summary "$summary" --argjson pinned "$pinned" \
+        --argjson updated "$now" --arg host "$(hostname -s)" \
+        '{agent:$agent, state:$state, summary:$summary, pinned:$pinned, project:$project,
+          branch:$branch, worktree:$worktree, cwd:$cwd, pane:$pane, tmux_session:$tmux_session,
+          window:$window, session_id:$session_id, host:$host, updated:$updated}' >"$file.tmp" &&
+        mv "$file.tmp" "$file"
+
+    tmux refresh-client -S 2>/dev/null
+
+    if [ "$state" != "$old_state" ] && { [ "$state" = waiting ] || [ "$state" = done ]; }; then
+        local where="$project"
+        [ -n "$branch" ] && where="$project · $branch"
+        notify "$state" "$pane" "$where ($agent)" "${summary:-$state}"
+    fi
+}
+
+forget() {
+    local pane="${1:-}" session="${2:-}" key
+    key="$(key_for "${pane:-$session}")"
+    rm -f "$STATE_DIR/$key.json"
+    if [ -n "$pane" ]; then
+        tmux set-option -p -u -t "$pane" @agent_state 2>/dev/null
+        tmux set-option -p -u -t "$pane" @agent_summary 2>/dev/null
+        tmux refresh-client -S 2>/dev/null
+    fi
+}
+
+cmd_claude() {
+    local input event session cwd prompt kind message
+    input="$(cat)"
+    have jq || die "jq not found"
+    event="$(printf '%s' "$input" | jq -r '.hook_event_name // ""')"
+    session="$(printf '%s' "$input" | jq -r '.session_id // ""')"
+    cwd="$(printf '%s' "$input" | jq -r '.cwd // ""')"
+    [ -n "$cwd" ] || cwd="$PWD"
+
+    case "$event" in
+        UserPromptSubmit)
+            prompt="$(printf '%s' "$input" | jq -r '.prompt // ""')"
+            record claude "$session" "$cwd" working "$prompt" ;;
+        PreToolUse|PostToolUse)
+            # Back to work after a permission prompt was answered.
+            record claude "$session" "$cwd" working "" ;;
+        Notification)
+            kind="$(printf '%s' "$input" | jq -r '.notification_type // ""')"
+            message="$(printf '%s' "$input" | jq -r '.message // ""')"
+            # The "waiting for your input" reminder comes after Stop, so it isn't news.
+            case "$kind$message" in
+                idle_prompt*|*"waiting for your input"*) return 0 ;;
+            esac
+            record claude "$session" "$cwd" waiting "" ;;
+        Stop)
+            record claude "$session" "$cwd" done "" ;;
+        SessionEnd)
+            forget "${TMUX_PANE:-}" "$session" ;;
+    esac
+    return 0
+}
+
+cmd_codex() {
+    local json="${!#}" type prompt
+    have jq || die "jq not found"
+    type="$(printf '%s' "$json" | jq -r '.type // ""' 2>/dev/null)"
+    [ "$type" = agent-turn-complete ] || return 0
+    # Codex only reports finished turns, so its prompt arrives with the "done".
+    prompt="$(printf '%s' "$json" | jq -r '(."input-messages" // [])[0] // ""')"
+    record codex "$(printf '%s' "$json" | jq -r '."thread-id" // ."turn-id" // ""')" \
+        "$(printf '%s' "$json" | jq -r --arg pwd "$PWD" '.cwd // $pwd')" done "$prompt"
+}
+
+# Drop agents whose tmux pane is gone or no longer runs an agent.
+prune() {
+    local f pane
+    for f in "$STATE_DIR"/*.json; do
+        [ -f "$f" ] || continue
+        pane="$(jq -r '.pane // ""' "$f" 2>/dev/null)"
+        if [ -n "$pane" ] && ! pane_alive "$pane"; then
+            rm -f "$f"
+        fi
+    done
+}
+
+cmd_list() {
+    have jq || die "jq not found"
+    mkdir -p "$STATE_DIR"
+    prune
+    local files
+    files="$(ls "$STATE_DIR"/*.json 2>/dev/null)"
+    if [ "${1:-}" = "--json" ]; then
+        if [ -z "$files" ]; then echo '[]'; return; fi
+        # shellcheck disable=SC2086
+        jq -s 'sort_by(-.updated)' $files
+        return
+    fi
+    [ -n "$files" ] || return 0
+    # shellcheck disable=SC2086
+    jq -rs --argjson now "$(date +%s)" 'sort_by(-.updated)[] |
+        [ ({working:"●", waiting:"?", done:"✓"}[.state] // .state),
+          .project + (if .branch != "" then "@" + .branch else "" end),
+          .agent, .pane,
+          ((($now - .updated) / 60 | floor | tostring) + "m"),
+          .summary ] | @tsv' $files |
+        awk -F'\t' '{ printf "%s  %-28s %-7s %-5s %4s  %s\n", $1, $2, $3, $4, $5, $6 }'
+}
+
+cmd_name() {
+    local pane="${TMUX_PANE:-}" file text="$*"
+    [ -n "$pane" ] || die "not in tmux"
+    [ -n "$text" ] || die "usage: agent-status name <summary>"
+    mkdir -p "$STATE_DIR"
+    file="$STATE_DIR/$(key_for "$pane").json"
+    [ -f "$file" ] || record agent "" "$PWD" idle ""
+    jq --arg s "$(summarize "$text")" '.summary = $s | .pinned = true' "$file" >"$file.tmp" && mv "$file.tmp" "$file"
+    tmux set-option -p -t "$pane" @agent_summary "$(summarize "$text")"
+}
+
+# From outside a terminal (Raycast, a notification): show that pane in iTerm.
+cmd_focus() {
+    local pane="${1:-}" client
+    [ -n "$pane" ] || die "usage: agent-status focus <pane>"
+    pane_alive "$pane" || die "no pane $pane"
+    client="$(tmux list-clients -F '#{client_activity} #{client_name}' 2>/dev/null | sort -rn | head -1 | cut -d' ' -f2-)"
+    tmux select-window -t "$pane" \; select-pane -t "$pane"
+    if [ -n "$client" ]; then
+        tmux switch-client -c "$client" -t "$pane"
+        [ "$(uname -s)" = Darwin ] && open -a iTerm
+    else
+        osascript \
+            -e 'tell application "iTerm"' \
+            -e 'activate' \
+            -e 'set w to (create window with default profile)' \
+            -e "tell current session of w to write text \"tmux attach -t '$(tmux display-message -p -t "$pane" '#{session_name}')'\"" \
+            -e 'end tell' >/dev/null
+    fi
+}
+
+case "${1:-}" in
+    claude) shift; cmd_claude "$@" ;;
+    codex) shift; cmd_codex "$@" ;;
+    list) shift; cmd_list "$@" ;;
+    name) shift; cmd_name "$@" ;;
+    focus) shift; cmd_focus "$@" ;;
+    rm)
+        case "${2:-}" in
+            %*) forget "$2" ;;
+            "") die "usage: agent-status rm <pane|session id>" ;;
+            *) forget "" "$2" ;;
+        esac ;;
+    -h|--help|help|"") sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//' ;;
+    *) die "unknown command $1 (try --help)" ;;
+esac
