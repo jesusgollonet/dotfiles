@@ -1,40 +1,24 @@
 #!/bin/bash
-
-COLOURS="$HOME"/.dotfiles/tmux/config/colours
-
-get_tmux_session_id() {
-  tmux display-message -p '#{session_id}'
-}
-
-set_background_colour() {
-  local colour_number
-  colour_number="$1"
-  tmux set status-bg colour"$colour_number"
-  tmux set status-fg colour0
-}
-
-get_colour_number() {
-  local colour_index num_colours normalized_index
-  colour_index="$1"
-  num_colours=$(wc -l <"$COLOURS" | awk '{print $1}')
-  normalized_index=$((1 + $((colour_index % num_colours))))
-  sed "$normalized_index!d" "$COLOURS"
-}
-
-set_remote_indicator() {
-  local session_id="$1"
-  if [ -n "$SSH_CONNECTION" ] || [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ] || [ -n "$MOSH_CONNECTION" ] || tmux show-environment -t "$session_id" 2>/dev/null | grep -qE "^(SSH_(CONNECTION|CLIENT|TTY)|MOSH_CONNECTION)="; then
-    tmux set -t "$session_id" status-left-length 50
-    tmux set -t "$session_id" status-left "#[bg=colour196,fg=colour255,bold] REMOTE #[default] [#S] "
-  fi
-}
+# Session identity is a bright accent on a consistent, readable dark bar.
+COLOURS="$(cd "$(dirname "${BASH_SOURCE[0]}")/../config" && pwd)/colours"
 
 main() {
-  local tmux_session_id colour_number
-  tmux_session_id=$(get_tmux_session_id)
-  colour_number=$(get_colour_number "${tmux_session_id#\$}")
-  set_background_colour "$colour_number"
-  set_remote_indicator "$tmux_session_id"
+  local session_id colour_number num_colours colour_index label
+  session_id="${1:-$(tmux display-message -p '#{session_id}')}"
+  [ -n "$session_id" ] || exit 1
+  num_colours=$(wc -l <"$COLOURS" | awk '{print $1}')
+  colour_index=$((1 + ${session_id#\$} % num_colours))
+  colour_number=$(sed "${colour_index}!d" "$COLOURS")
+
+  # Replace legacy per-session backgrounds as well as setting the new defaults.
+  tmux set -t "$session_id" status-bg colour234
+  tmux set -t "$session_id" status-fg colour252
+  label="#[bg=colour234,fg=colour${colour_number},bold] [#S] #[default] "
+  if [ -n "${SSH_CONNECTION:-}${SSH_CLIENT:-}${SSH_TTY:-}${MOSH_CONNECTION:-}" ] || tmux show-environment -t "$session_id" 2>/dev/null | grep -qE "^(SSH_(CONNECTION|CLIENT|TTY)|MOSH_CONNECTION)="; then
+    label="#[bg=colour160,fg=colour255,bold] REMOTE #[default] $label"
+  fi
+  tmux set -t "$session_id" status-left-length 50
+  tmux set -t "$session_id" status-left "$label"
 }
 
-main
+main "$@"
