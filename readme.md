@@ -46,7 +46,7 @@ Identity, work paths and secrets stay out of the repo, in untracked files that a
 - `ttf list`: projects and running sessions
 - `ttf open <project> --no-server | --no-browser | --detach`
 
-Project roots are kept out of the repo, in `~/.config/ttf/roots` (one dir per line) or `$TTF_ROOTS` (colon-separated).
+Project roots are kept out of the repo, in `~/.config/ttf/roots` (one dir per line) or `$TTF_ROOTS` (colon-separated). Their immediate subdirectories are listed as before. `ttf` also indexes projects from zoxide history, configured roots that are themselves projects, and the checkout containing `ttf` (including this dotfiles repo). Visited subdirectories resolve to their Git checkout root, or the nearest parent containing `.tmux.project`, `package.json`, `pyproject.toml`, `Cargo.toml`, or `go.mod` for projects without Git. Missing paths and non-project history entries are skipped.
 Sessions use the same names as `tnn`/`zt`, and `.tmux.project` still sets the layout. It can also set `TTF_SERVER="..."` (or `TTF_SERVER=""` for none); otherwise `npm run dev` runs when `package.json` has a dev script.
 
 `raycast/ttf` is the Raycast front end: `cd raycast/ttf && npm install && npm run dev` once to import it into Raycast.

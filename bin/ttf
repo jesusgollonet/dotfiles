@@ -8,7 +8,8 @@
 #
 # Projects are the subdirectories of the roots listed in $TTF_ROOTS
 # (colon-separated) or ~/.config/ttf/roots (one dir per line). Both live outside
-# this repo so project names stay private. Running tmux sessions are listed too.
+# this repo so project names stay private. Projects from zoxide history,
+# the checkout containing ttf, and running tmux sessions are listed too.
 #
 # Compatible with tnn/zt: same session names, and .tmux.project is sourced the
 # same way. A .tmux.project may set TTF_SERVER (command to run in the "server"
@@ -42,6 +43,44 @@ roots() {
     done
 }
 
+# Follow installed symlinks so the dotfiles checkout is indexed from any cwd.
+script_repo() {
+    local script="$0" target
+    while [ -L "$script" ]; do
+        target="$(readlink "$script")"
+        case "$target" in
+            /*) script="$target" ;;
+            *) script="$(dirname "$script")/$target" ;;
+        esac
+    done
+    git -C "$(dirname "$script")" rev-parse --show-toplevel 2>/dev/null
+}
+
+# Prefer the Git checkout root. For projects without Git, walk up to a
+# project marker so visits to src/ do not create a second project entry.
+project_dir() {
+    local dir="$1" marker
+    [ -d "$dir" ] || return 1
+    git -C "$dir" rev-parse --show-toplevel 2>/dev/null && return 0
+    while [ "$dir" != / ] && [ "$dir" != "$HOME" ]; do
+        for marker in .tmux.project package.json pyproject.toml Cargo.toml go.mod; do
+            if [ -f "$dir/$marker" ]; then
+                printf '%s\n' "$dir"
+                return 0
+            fi
+        done
+        dir="$(dirname "$dir")"
+    done
+    return 1
+}
+
+history_projects() {
+    command -v zoxide >/dev/null 2>&1 || return 0
+    zoxide query -l 2>/dev/null | while IFS= read -r dir; do
+        project_dir "$dir"
+    done
+}
+
 # Lines of "name<TAB>path" for every project dir and every running session.
 projects() {
     {
@@ -51,6 +90,11 @@ projects() {
                 d="${d%/}"
                 printf '%s\t%s\n' "$(session_name_for "$d")" "$d"
             done
+        done
+        # A configured root may itself be a project (including a dot directory).
+        { roots; script_repo; history_projects; } | while IFS= read -r dir; do
+            repo="$(project_dir "$dir")" || continue
+            printf '%s\t%s\n' "$(session_name_for "$repo")" "$repo"
         done
         # tmux escapes a tab inside -F, so add it here.
         tmux list-sessions -F '#{session_name}' 2>/dev/null | while read -r s; do
