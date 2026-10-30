@@ -1,7 +1,7 @@
 " Ask the agent in the tmux pane to the right about the code in front of you.
 " Visual <leader>a asks about the selection, <leader>A about the cursor line
 " (or follows up on the thread there). The question goes out through
-" bin/agent-send; answers the agent pipes to `vim-reply <id>` show up as a one-line
+" bin/agent-send; answers the agent sends with `vim-reply <id> "answer"` show up as a one-line
 " marker below the lines asked about.
 "   <leader>v / :AgentShow  open the answer on the cursor line in a markdown split (q closes)
 "   :AgentToggle  hide/show answers
@@ -69,7 +69,7 @@ function! s:Message(id, ctx, question) abort
     endfor
   endif
   call add(lines, '')
-  call add(lines, printf('When done, also pipe a concise markdown answer (at most %d lines) to `vim-reply %s` so it shows inline in my editor.',
+  call add(lines, printf('When done, also send a concise markdown answer (at most %d lines) by running `vim-reply %s "answer"` directly so it shows inline in my editor. Pass the answer as a safely shell-quoted argument; do not use a pipe.',
         \ g:agent_reply_lines, a:id))
   return join(lines, "\n")
 endfunction

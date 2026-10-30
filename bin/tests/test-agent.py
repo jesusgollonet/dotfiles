@@ -108,7 +108,8 @@ qa!
     message = sent.read_text()
     assert message.startswith(f'[vim #{id}] {source}:2-3\n\nwhat type is m?\n\n```typescript\n'), message
     assert '  const m = new Map()\n  m.set(a, 2)\n```' in message, message
-    assert f'`vim-reply {id}`' in message, message
+    assert f'`vim-reply {id} "answer"` directly' in message, message
+    assert 'do not use a pipe' in message, message
     # prop_list() lists virtual text newest first; Vim draws it oldest first.
     texts = lambda key: [t for t in reversed(r[key]) if t]
     assert texts('pending') == [f'  ⋯ #{id} what type is m?'], r['pending']

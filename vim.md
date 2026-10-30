@@ -96,7 +96,7 @@
 Asks the agent in the tmux pane to the right, without leaving Vim.
 - visual `<leader>a` - ask about the selection (popup under it, Enter send, Esc cancel)
 - `<leader>A` - ask about the cursor line, or follow up on the thread there
-- The message carries the file, line range, code and coc diagnostics, and asks the agent to also pipe a short answer to `vim-reply <id>`, which shows as virtual text below the lines
+- The message carries the file, line range, code and coc diagnostics, and asks the agent to also send a short answer by running `vim-reply <id> "answer"` directly, without a pipe, which shows as virtual text below the lines
 - `:AgentShow` full answer in the preview window, `:AgentToggle` hide/show, `:AgentClear` drop this buffer's threads
 
 ## Misc Mappings
