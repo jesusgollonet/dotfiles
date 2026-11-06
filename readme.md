@@ -22,6 +22,7 @@ ln -s ~/.dotfiles/zsh/zshenv .zshenv
 ln -s ~/.dotfiles/git/gitconfig .gitconfig
 
 ln -s ~/.dotfiles/tmux/tmux.conf .tmux.conf
+ln -s ~/.dotfiles/atuin/config.toml ~/.config/atuin/config.toml
 
 # install vim-plug then all vim plugins
 
