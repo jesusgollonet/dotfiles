@@ -1,0 +1,25 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "harvest-track",
+  "title": "Harvest Track",
+  "description": "Switch Harvest timers using short, saved project names.",
+  "icon": "command-icon.png",
+  "author": "jesusgollonet",
+  "license": "MIT",
+  "type": "module",
+  "commands": [{
+    "name": "track",
+    "title": "Track",
+    "subtitle": "Harvest",
+    "description": "Start a saved timer, choose a project/task, or enter stop or status.",
+    "mode": "view",
+    "arguments": [{ "name": "project", "type": "text", "placeholder": "acme, atlas, stop, status", "required": false }]
+  }],
+  "preferences": [
+    { "name": "token", "title": "Harvest Personal Access Token", "description": "Create at https://id.getharvest.com/developers", "type": "password", "required": true },
+    { "name": "accountId", "title": "Harvest Account ID", "description": "Shown alongside your personal access token.", "type": "textfield", "required": true }
+  ],
+  "dependencies": { "@raycast/api": "^2.12.1" },
+  "devDependencies": { "@types/node": "26.6.5", "@types/react": "19.3.0", "typescript": "^5.9.3" },
+  "scripts": { "build": "ray build -e dist", "dev": "ray develop", "typecheck": "tsc --noEmit", "test": "node --experimental-strip-types --test tests/*.test.ts" }
+}

@@ -51,3 +51,7 @@ Project roots are kept out of the repo, in `~/.config/ttf/roots` (one dir per li
 Sessions use the same names as `tnn`/`zt`, and `.tmux.project` still sets the layout. It can also set `TTF_SERVER="..."` (or `TTF_SERVER=""` for none); otherwise `npm run dev` runs when `package.json` has a dev script.
 
 `raycast/ttf` is the Raycast front end: `cd raycast/ttf && npm install && npm run dev` once to import it into Raycast.
+
+## Harvest tracking
+
+[`raycast/harvest`](raycast/harvest/README.md) adds `track acme`, `track atlas`, `track stop`, and `track status` to Raycast. Set up your Harvest token and save a shortcut for each project/task once; subsequent commands switch timers directly.
