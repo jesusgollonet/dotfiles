@@ -139,3 +139,32 @@ test("concurrent metadata requests share one fetch and corrupt storage is treate
   assert.deepEqual(await Promise.all([cache.get("options", 1000, load), cache.get("options", 1000, load)]), [["value"], ["value"]]);
   assert.equal(calls, 1);
 });
+
+test("day view is cached for the same date only, without notes", async () => {
+  const store = new Map<string, string>();
+  const storage = { get: (k: string) => store.get(k), set: (k: string, v: string) => { store.set(k, v); } };
+  const { request } = mock({ entries: [entry({ id: 2, notes: "private" }), entry({ id: 1 })] });
+  const api = new Harvest("token", "account", request, new MetadataCache(storage));
+  assert.equal(api.cachedDay(), undefined);
+  const user = await api.user();
+  const live = await api.day(user);
+  assert.deepEqual(live.map((e) => e.id), [1, 2], "oldest entry first");
+  assert.deepEqual(api.cachedDay()?.map((e) => [e.id, e.notes]), [[1, null], [2, null]]);
+  assert.equal(api.cachedDay(new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)), undefined, "a new day ignores yesterday's cache");
+});
+
+test("starting a timer updates the cached day so a reopen shows the new timer", async () => {
+  const store = new Map<string, string>();
+  const storage = { get: (k: string) => store.get(k), set: (k: string, v: string) => { store.set(k, v); } };
+  const other = entry({ id: 1, project: { id: 11, name: "Other" }, is_running: true });
+  const { request: base } = mock({ entries: [other], running: [other] });
+  const request: typeof fetch = async (input, init) => init?.method === "POST"
+    ? new Response(JSON.stringify(entry({ id: 2, is_running: true })), { status: 201 })
+    : base(input, init);
+  const api = new Harvest("token", "account", request, new MetadataCache(storage));
+  await api.day(await api.user());
+  await api.start(option);
+  assert.deepEqual(api.cachedDay()?.map((e) => [e.id, e.is_running]), [[1, false], [2, true]]);
+  await api.stop(99);
+  assert.deepEqual(api.cachedDay()?.map((e) => e.is_running), [false, false]);
+});

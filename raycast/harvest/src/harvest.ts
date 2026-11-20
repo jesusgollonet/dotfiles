@@ -1,6 +1,6 @@
 export type Named = { id: number; name: string };
 export type Option = { project: Named; task: Named; client: Named };
-export type Entry = Option & { id: number; spent_date: string; is_running: boolean; is_locked: boolean; notes: string | null; updated_at: string };
+export type Entry = Option & { id: number; spent_date: string; is_running: boolean; is_locked: boolean; notes: string | null; updated_at: string; hours: number };
 type Assignment = { is_active: boolean; project: Named; client: Named; task_assignments: { is_active: boolean; task: Named }[] };
 
 // Harvest display names → IANA identifiers, from its supported-timezones table.
@@ -192,6 +192,7 @@ export class MetadataCache {
   }
   // Even expired data can populate the picker immediately while it refreshes.
   peek<T>(key: string): T | undefined { return this.read<T>(key)?.data; }
+  set<T>(key: string, data: T, ttl = 0) { this.storage.set(key, JSON.stringify({ data, expiresAt: this.now() + ttl })); }
   async get<T>(key: string, ttl: number, fetchData: () => Promise<T>, force = false): Promise<T> {
     const entry = this.read<T>(key);
     if (!force && entry && entry.expiresAt > this.now()) return entry.data;
@@ -270,9 +271,47 @@ export class Harvest {
     return this.list(`time_entries?user_id=${userId}&is_running=true`, "time_entries");
   }
 
+  // Last known day view, so the list opens at its final layout instead of
+  // jumping when the request finishes. Ignored once the date has changed.
+  cachedDay(now = new Date()): Entry[] | undefined {
+    const user = this.cache?.peek<User>("user");
+    const cached = this.cache?.peek<{ date: string; entries: Entry[] }>("day");
+    return user && cached?.date === localDate(now, user.timezone) ? cached.entries : undefined;
+  }
+
+  // Today's entries in the order they were tracked, plus any timer left running
+  // since an earlier day.
+  async day(user: User): Promise<Entry[]> {
+    const date = localDate(new Date(), user.timezone);
+    const [today, running] = await Promise.all([
+      this.list<Entry>(`time_entries?user_id=${user.id}&from=${date}&to=${date}`, "time_entries"),
+      this.running(user.id),
+    ]);
+    const entries = [...today.reverse(), ...running.filter((r) => !today.some((e) => e.id === r.id))];
+    // Notes aren't displayed, so keep them out of the on-disk cache.
+    this.cache?.set("day", { date, entries: entries.map((e) => ({ ...e, notes: null })) });
+    return entries;
+  }
+
+  // Apply a timer change made here to the cached day, so the next open
+  // doesn't show the previous timer as running before the live data arrives.
+  private updateCachedDay(started?: Entry) {
+    const cached = this.cache?.peek<{ date: string; entries: Entry[] }>("day");
+    if (!cached) return;
+    const entries = cached.entries.map((e) => ({ ...e, is_running: false }));
+    if (started) {
+      const index = entries.findIndex((e) => e.id === started.id);
+      const entry = { ...started, notes: null, is_running: true };
+      if (index >= 0) entries[index] = entry;
+      else if (started.spent_date === cached.date) entries.push(entry);
+    }
+    this.cache!.set("day", { date: cached.date, entries });
+  }
+
   async stop(userId: number): Promise<number> {
     const entries = await this.running(userId);
     for (const entry of entries) await this.api(`time_entries/${entry.id}/stop`, "PATCH");
+    this.updateCachedDay();
     return entries.length;
   }
 
@@ -293,9 +332,11 @@ export class Harvest {
     }
     if (current) return "Tracking";
     try {
-      if (target) await this.api(`time_entries/${target.id}/restart`, "PATCH");
-      // Omitting hours/ended_time starts a running entry in either Harvest timer mode.
-      else await this.api("time_entries", "POST", { project_id: option.project.id, task_id: option.task.id, spent_date: today });
+      const started = target
+        ? await this.api<Entry>(`time_entries/${target.id}/restart`, "PATCH")
+        // Omitting hours/ended_time starts a running entry in either Harvest timer mode.
+        : await this.api<Entry>("time_entries", "POST", { project_id: option.project.id, task_id: option.task.id, spent_date: today });
+      this.updateCachedDay(started);
     } catch (error) {
       throw new Error(`Previous timer stopped; couldn't start the selected timer. Check Harvest before retrying. ${error instanceof Error ? error.message : ""}`);
     }

@@ -1,8 +1,10 @@
-import { Action, ActionPanel, Cache, Form, Icon, LaunchProps, List, LocalStorage, Toast, closeMainWindow, getPreferenceValues, showHUD, showToast, useNavigation } from "@raycast/api";
+import { Action, ActionPanel, Cache, Color, Form, Icon, LaunchProps, List, LocalStorage, Toast, closeMainWindow, getPreferenceValues, showHUD, showToast, useNavigation } from "@raycast/api";
 import { createHash } from "node:crypto";
 import { useEffect, useRef, useState } from "react";
-import { Harvest, MetadataCache, Option, sameOption } from "./harvest";
+import { Entry, Harvest, MetadataCache, Option, sameOption } from "./harvest";
+import { DayRow, formatHours, summarizeDay } from "./today";
 import { matchesSearch } from "./search";
+import { itemKey, rankItems, recordUse, Usage } from "./ranking";
 
 type Favorite = Option & { alias: string };
 const preferences = () => getPreferenceValues<{ token: string; accountId: string }>();
@@ -15,6 +17,8 @@ const client = () => {
   return apiClient.api;
 };
 const storageKey = () => `favorites:${preferences().accountId.trim()}`;
+const usageKey = () => `usage:${preferences().accountId.trim()}`;
+const pinsKey = () => `pins:${preferences().accountId.trim()}`;
 const normalize = (s: string) => s.trim().toLowerCase();
 async function favorites(): Promise<Favorite[]> {
   return JSON.parse(await LocalStorage.getItem<string>(storageKey()) || "[]");
@@ -44,9 +48,15 @@ export default function Command({ arguments: args }: LaunchProps<{ arguments: { 
   const [search, setSearch] = useState(["stop", "status"].includes(query) ? "" : query);
   const [options, setOptions] = useState<Option[]>(() => client().cachedOptions() || []);
   const [saved, setSaved] = useState<Favorite[]>([]);
+  const [usage, setUsage] = useState<Usage>({});
+  const [pins, setPins] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [failure, setFailure] = useState<string>();
-  const [status, setStatus] = useState("Loading current timer…");
+  const [day, setDay] = useState<Entry[] | undefined>(() => client().cachedDay());
+  // Cached hours are fine to show while loading, but a timer may have been
+  // started or stopped elsewhere (Harvest app, web), so only mark a row as
+  // running once Harvest has confirmed it.
+  const [dayIsLive, setDayIsLive] = useState(false);
   const started = useRef(false);
   const busy = useRef(false);
 
@@ -62,6 +72,14 @@ export default function Command({ arguments: args }: LaunchProps<{ arguments: { 
     setLoading(true);
     try {
       const message = await client().start(option);
+      try {
+        const previous = JSON.parse(await LocalStorage.getItem<string>(usageKey()) || "{}") as Usage;
+        const next = recordUse(previous, option);
+        await LocalStorage.setItem(usageKey(), JSON.stringify(next));
+        setUsage(next);
+      } catch {
+        await showToast({ style: Toast.Style.Failure, title: "Timer is running; couldn't save item history" });
+      }
       await closeMainWindow();
       await showHUD(`${message}: ${option.project.name} · ${option.task.name}`);
     } catch (error) { await report(error); }
@@ -76,7 +94,7 @@ export default function Command({ arguments: args }: LaunchProps<{ arguments: { 
       const api = client();
       const user = await api.user();
       const count = await api.stop(user.id);
-      setStatus("No timer running");
+      setDay((entries) => entries?.map((e) => ({ ...e, is_running: false })));
       await showHUD(count ? "Harvest timer stopped" : "No timer running");
     } catch (error) { await report(error); }
     finally { busy.current = false; setLoading(false); }
@@ -86,8 +104,12 @@ export default function Command({ arguments: args }: LaunchProps<{ arguments: { 
     setLoading(true);
     setFailure(undefined);
     try {
-      const shortcuts = await favorites();
+      const [shortcuts, storedUsage, storedPins] = await Promise.all([
+        favorites(), LocalStorage.getItem<string>(usageKey()), LocalStorage.getItem<string>(pinsKey()),
+      ]);
       setSaved(shortcuts);
+      setUsage(JSON.parse(storedUsage || "{}"));
+      setPins(JSON.parse(storedPins || "[]"));
       if (allowDirect && query === "stop") { await stop(); return; }
       // A saved command should skip loading the picker entirely.
       const favorite = shortcuts.find((f) => f.alias === query);
@@ -99,9 +121,11 @@ export default function Command({ arguments: args }: LaunchProps<{ arguments: { 
         api.options(force).then(setOptions),
         (async () => {
           const user = await api.user(force);
-          const running = await api.running(user.id);
+          const entries = await api.day(user);
+          setDay(entries);
+          setDayIsLive(true);
+          const running = entries.filter((e) => e.is_running);
           const label = running.length ? running.map((e) => `${e.project.name} · ${e.task.name}`).join(", ") : "No timer running";
-          setStatus(label);
           if (allowDirect && query === "status") await showHUD(running.length ? `Tracking: ${label}` : label);
         })(),
       ]);
@@ -119,10 +143,28 @@ export default function Command({ arguments: args }: LaunchProps<{ arguments: { 
 
   const refresh = () => load(false, true);
 
-  const activeFavorites = saved.filter((f) => options.some((o) => sameOption(o, f)));
+  const ranked = rankItems(options, usage);
+  const isFavorite = (o: Option) => pins.includes(itemKey(o)) || saved.some((f) => sameOption(f, o));
+  const favoriteItems = ranked.filter(isFavorite);
+  const remaining = ranked.filter((o) => !isFavorite(o));
+  // With an empty search the list stays short: today's rows already cover what
+  // you've tracked, so show four other frequent tasks and leave the full
+  // project list for searches.
+  const searching = search.trim() !== "";
+  const trackedToday = new Set((day || []).map(itemKey));
+  const frequentItems = remaining.filter((o) => usage[itemKey(o)] && !trackedToday.has(itemKey(o))).slice(0, searching ? 8 : 4);
+  const frequentKeys = new Set(frequentItems.map(itemKey));
+  const otherItems = searching ? remaining.filter((o) => !frequentKeys.has(itemKey(o))) : [];
   const matchesOption = (option: Option, alias = "") => matchesSearch(search, [option.client.name, option.project.name, option.task.name, alias]);
   const actions = (option: Option, favorite?: Favorite) => <ActionPanel>
     <Action title="Start Tracking" icon={Icon.Play} onAction={() => start(option)} />
+    {!favorite && <Action title={pins.includes(itemKey(option)) ? "Remove from Favorites" : "Add to Favorites"} icon={Icon.Star} shortcut={{ modifiers: ["cmd"], key: "d" }} onAction={async () => {
+      const key = itemKey(option);
+      const current = JSON.parse(await LocalStorage.getItem<string>(pinsKey()) || "[]") as string[];
+      const next = current.includes(key) ? current.filter((id) => id !== key) : [...current, key];
+      await LocalStorage.setItem(pinsKey(), JSON.stringify(next));
+      setPins(next);
+    }} />}
     <Action.Push title="Save Shortcut" icon={Icon.Star} shortcut={{ modifiers: ["cmd"], key: "s" }} target={<SaveShortcut option={option} initialAlias={query || option.project.name.toLowerCase()} onSaved={() => { void favorites().then(setSaved); }} />} />
     {favorite && <Action title="Remove Shortcut" icon={Icon.StarDisabled} onAction={async () => {
       const next = (await favorites()).filter((f) => f.alias !== favorite.alias);
@@ -133,16 +175,41 @@ export default function Command({ arguments: args }: LaunchProps<{ arguments: { 
     <Action title="Refresh" icon={Icon.ArrowClockwise} shortcut={{ modifiers: ["cmd"], key: "r" }} onAction={refresh} />
   </ActionPanel>;
 
-  return <List filtering={false} isLoading={loading} searchText={search} onSearchTextChange={setSearch} searchBarPlaceholder="Project, client, task, or shortcut">
+  const row = (o: Option) => {
+    const favorite = saved.find((f) => sameOption(f, o));
+    return <List.Item key={itemKey(o)} id={itemKey(o)} title={favorite?.alias || o.project.name} subtitle={favorite ? `${o.project.name} · ${o.task.name}` : o.task.name} accessories={[{ text: o.client.name }]} icon={isFavorite(o) ? Icon.Star : Icon.Clock} actions={actions(o, favorite)} />;
+  };
+  const matching = <T extends Option>(items: T[]) => items.filter((o) => matchesOption(o, saved.filter((f) => sameOption(f, o)).map((f) => f.alias).join(" ")));
+
+  const { rows: dayRows, total } = summarizeDay(day || []);
+  // "status"/"stop"/"today" show the whole day; other words filter it like the project list.
+  const showWholeDay = matchesSearch(search, ["status", "stop", "today"]);
+  const dayRow = ({ running, ...rest }: DayRow) => dayRowView({ ...rest, running: running && dayIsLive });
+  const dayRowView = (r: DayRow) => <List.Item key={`today-${itemKey(r)}`} id={`today-${itemKey(r)}`} title={r.project.name} subtitle={r.task.name}
+    icon={r.running ? { source: Icon.CircleProgress50, tintColor: Color.Orange } : Icon.Clock}
+    accessories={[...(r.running ? [{ tag: { value: "Running", color: Color.Orange } }] : []), { text: r.client.name }, { text: { value: formatHours(r.hours), color: r.running ? Color.Orange : Color.PrimaryText } }]}
+    actions={r.running
+      ? <ActionPanel><Action title="Stop Timer" icon={Icon.Stop} onAction={stop} /><Action title="Refresh" icon={Icon.ArrowClockwise} shortcut={{ modifiers: ["cmd"], key: "r" }} onAction={refresh} /></ActionPanel>
+      : actions(r)} />;
+
+  const totalLabel = `${formatHours(total)} h`;
+  return <List filtering={false} navigationTitle={day ? `Track · ${totalLabel} today` : "Track"} isLoading={loading} searchText={search} onSearchTextChange={setSearch} searchBarPlaceholder="Project, client, task, or shortcut">
     <List.EmptyView title={failure ? "Couldn't load Harvest" : "No matching projects/tasks"} description={failure || (search.trim() ? "Try words from the client, project, task, or shortcut name." : "Check your project assignments in Harvest.")} actions={<ActionPanel><Action title="Refresh" onAction={refresh} /></ActionPanel>} />
-    {matchesSearch(search, [status, "status", "stop"]) && <List.Section title="Current Timer">
-      <List.Item title={status} icon={Icon.Clock} keywords={["status", "stop"]} actions={<ActionPanel><Action title="Stop Timer" icon={Icon.Stop} onAction={stop} /><Action title="Refresh" onAction={refresh} /></ActionPanel>} />
+    {!day && showWholeDay && <List.Section title="Today"><List.Item id="today-loading" title="Loading today…" icon={Icon.Clock} /></List.Section>}
+    {day && <List.Section title={`Today · ${totalLabel}`}>
+      {(showWholeDay ? dayRows : matching(dayRows)).map(dayRow)}
+      {dayRows.length > 0 && showWholeDay && <List.Item id="today-total" title="Total" icon={Icon.Calculator} accessories={[{ text: { value: formatHours(total), color: Color.PrimaryText } }]} actions={<ActionPanel><Action title="Refresh" icon={Icon.ArrowClockwise} onAction={refresh} /></ActionPanel>} />}
+      {!dayRows.length && showWholeDay && <List.Item id="today-empty" title="Nothing tracked yet today" icon={Icon.Clock} actions={<ActionPanel><Action title="Refresh" onAction={refresh} /></ActionPanel>} />}
     </List.Section>}
-    <List.Section title="Shortcuts">
-      {activeFavorites.filter((f) => matchesOption(f, f.alias)).map((f) => <List.Item key={f.alias} title={f.alias} subtitle={`${f.project.name} · ${f.task.name}`} keywords={[f.client.name]} icon={Icon.Star} actions={actions(f, f)} />)}
+    <List.Section title="Favorites & Shortcuts" subtitle="⌘D adds a favorite · ⌘S saves a named shortcut">
+      {matching(favoriteItems).map(row)}
     </List.Section>
-    <List.Section title="Projects & Tasks" subtitle="⌘S saves a shortcut for the selected task">
-      {options.filter((o) => matchesOption(o)).map((o) => <List.Item key={`${o.project.id}:${o.task.id}`} title={o.project.name} subtitle={o.task.name} keywords={[o.client.name]} accessories={[{ text: o.client.name }]} icon={Icon.Clock} actions={actions(o)} />)}
+    <List.Section title="Recent & Frequent">
+      {matching(frequentItems).map(row)}
+    </List.Section>
+    <List.Section title="Projects & Tasks" subtitle="⌘D adds a favorite · ⌘S saves a named shortcut">
+      {/* Only populated while searching. */}
+      {matching(otherItems).map(row)}
     </List.Section>
   </List>;
 }
